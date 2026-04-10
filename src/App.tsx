@@ -1,0 +1,91 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { CartProvider } from "@/contexts/CartContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+
+import Index from "./pages/Index";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import SearchPage from "./pages/SearchPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AccountPage from "./pages/AccountPage";
+import StorePage from "./pages/StorePage";
+import SellerSignupPage from "./pages/SellerSignupPage";
+
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import SellerOrders from "./pages/seller/SellerOrders";
+import SellerFinancials from "./pages/seller/SellerFinancials";
+import SellerSettings from "./pages/seller/SellerSettings";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminStores from "./pages/admin/AdminStores";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminFinancials from "./pages/admin/AdminFinancials";
+import AdminPlans from "./pages/admin/AdminPlans";
+import AdminBanners from "./pages/admin/AdminBanners";
+import AdminSettings from "./pages/admin/AdminSettings";
+
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public */}
+                <Route path="/" element={<Index />} />
+                <Route path="/produtos" element={<ProductsPage />} />
+                <Route path="/produto/:id" element={<ProductDetailPage />} />
+                <Route path="/carrinho" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/busca" element={<SearchPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/cadastro" element={<SignupPage />} />
+                <Route path="/cadastro-lojista" element={<SellerSignupPage />} />
+                <Route path="/conta" element={<AccountPage />} />
+                <Route path="/loja/:id" element={<StorePage />} />
+
+                {/* Seller */}
+                <Route path="/lojista" element={<SellerDashboard />} />
+                <Route path="/lojista/produtos" element={<SellerProducts />} />
+                <Route path="/lojista/pedidos" element={<SellerOrders />} />
+                <Route path="/lojista/financeiro" element={<SellerFinancials />} />
+                <Route path="/lojista/configuracoes" element={<SellerSettings />} />
+
+                {/* Admin */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/lojistas" element={<AdminStores />} />
+                <Route path="/admin/produtos" element={<AdminProducts />} />
+                <Route path="/admin/pedidos" element={<AdminOrders />} />
+                <Route path="/admin/financeiro" element={<AdminFinancials />} />
+                <Route path="/admin/planos" element={<AdminPlans />} />
+                <Route path="/admin/banners" element={<AdminBanners />} />
+                <Route path="/admin/configuracoes" element={<AdminSettings />} />
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
