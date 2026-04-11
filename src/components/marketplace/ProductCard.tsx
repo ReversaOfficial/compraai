@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Eye } from 'lucide-react';
 import type { Product } from '@/data/mock';
 import { useCart } from '@/contexts/CartContext';
-import { Badge } from '@/components/ui/badge';
 import { categories } from '@/data/mock';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -16,42 +15,48 @@ const ProductCard = ({ product }: { product: Product }) => {
   const cat = categories.find(c => c.id === product.categoryId);
 
   return (
-    <div className="group flex flex-col rounded-2xl bg-card border border-transparent hover:border-primary/20 shadow-card hover:shadow-elevated transition-all duration-300 overflow-hidden">
-      <Link to={`/produto/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary/30">
+    <div className="group flex flex-col bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elevated overflow-hidden">
+      {/* Imagem */}
+      <Link to={`/produto/${product.id}`} className="relative overflow-hidden bg-secondary/20" style={{ aspectRatio: '1/1' }}>
         <img
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />
+
+        {/* Badge desconto */}
         {discount > 0 && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-accent text-white border-0 font-bold px-2.5 py-1 text-xs shadow-sm">
-              -{discount}%
-            </Badge>
+          <div className="absolute top-0 left-0 bg-accent text-white text-xs font-extrabold px-3 py-1.5 uppercase tracking-wide">
+            -{discount}%
           </div>
         )}
+
+        {/* Badge categoria */}
         {cat && (
-          <div className="absolute top-3 right-3">
-            <Badge variant="secondary" className="text-[10px] backdrop-blur-sm bg-white/80 text-foreground font-medium shadow-sm">
-              {cat.icon} {cat.name}
-            </Badge>
+          <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2.5 py-1.5">
+            {cat.icon} {cat.name}
           </div>
         )}
-        <button
-          onClick={(e) => { e.preventDefault(); addItem(product); }}
-          className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-primary/90 hover:scale-110"
-        >
-          <ShoppingCart className="h-4 w-4" />
-        </button>
+
+        {/* Overlay hover com botões */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+          <button
+            onClick={(e) => { e.preventDefault(); addItem(product); }}
+            className="flex items-center gap-2 bg-primary text-white text-sm font-bold px-5 py-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-accent"
+          >
+            <ShoppingCart className="h-4 w-4" /> Adicionar
+          </button>
+        </div>
       </Link>
 
+      {/* Info */}
       <Link to={`/produto/${product.id}`} className="flex flex-col flex-1 p-4">
-        <p className="text-xs text-muted-foreground mb-1 font-medium">{product.storeName}</p>
-        <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-auto">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{product.storeName}</p>
+        <h3 className="text-sm font-bold leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-3">
           {product.name}
         </h3>
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="mt-auto flex items-baseline gap-2">
           {product.promoPrice ? (
             <>
               <span className="text-lg font-extrabold text-primary">{fmt(product.promoPrice)}</span>

@@ -1,92 +1,81 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Truck, Shield, Store, CreditCard, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Store, CreditCard, ChevronRight } from 'lucide-react';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
 import ProductCard from '@/components/marketplace/ProductCard';
 import { Button } from '@/components/ui/button';
 import { categories, products, stores } from '@/data/mock';
 
-const promoProducts = products.filter(p => p.promoPrice);
-const newProducts = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8);
-const bestSellers = [...products].sort((a, b) => b.sold - a.sold).slice(0, 8);
+const promoProducts = products.filter(p => p.promoPrice).slice(0, 4);
+const newProducts = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
+const bestSellers = [...products].sort((a, b) => b.sold - a.sold).slice(0, 4);
 
 const benefits = [
-  { icon: Truck, title: 'Entrega ou Retirada', desc: 'Receba em casa ou retire na loja' },
-  { icon: Shield, title: 'Compra Segura', desc: 'Pagamento protegido via Pix ou cartão' },
+  { icon: Truck, title: 'Entrega Rápida', desc: 'Receba em casa no mesmo dia' },
+  { icon: Shield, title: 'Compra Segura', desc: 'Pagamento 100% protegido' },
   { icon: Store, title: 'Lojas Locais', desc: 'Apoie o comércio da sua cidade' },
-  { icon: CreditCard, title: 'Pagamento Único', desc: 'Compre de várias lojas, pague uma vez' },
-];
-
-// Banners de categoria com imagens lifestyle
-const heroBanners = [
-  {
-    title: 'Novidades para sua casa',
-    subtitle: 'Descubra os melhores produtos de decoração, cozinha e conforto',
-    cta: 'Ver Coleção',
-    link: '/busca?cat=casa',
-    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80',
-    position: 'left' as const,
-  },
-  {
-    title: 'Moda com personalidade',
-    subtitle: 'Peças exclusivas de lojas locais para todos os estilos',
-    cta: 'Explorar Moda',
-    link: '/busca?cat=moda',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80',
-    position: 'right' as const,
-  },
-];
-
-const categoryBanners = [
-  { name: 'Cozinha', image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80', link: '/busca?cat=cozinha', tag: 'Novos itens' },
-  { name: 'Cama, Mesa & Banho', image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', link: '/busca?cat=cama-mesa-banho', tag: 'Até 30% OFF' },
-  { name: 'Eletrônicos', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80', link: '/busca?cat=eletronicos', tag: 'Top vendas' },
+  { icon: CreditCard, title: 'Pague Único', desc: 'Várias lojas, um pagamento' },
 ];
 
 const Index = () => (
   <MarketplaceLayout>
-    {/* ═══ HERO BANNER ═══ */}
-    <section className="relative overflow-hidden bg-gradient-hero">
-      <div className="container relative z-10 py-20 md:py-32 lg:py-40">
-        <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white mb-6">
-            <Sparkles className="h-4 w-4" />
-            O marketplace da sua cidade
+
+    {/* ══════════════════════════════════════
+        HERO — imagem de fundo + texto
+    ══════════════════════════════════════ */}
+    <section className="relative w-full overflow-hidden" style={{ minHeight: '90vh' }}>
+      {/* Imagem de fundo */}
+      <img
+        src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1600&q=85"
+        alt="Hero"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+      {/* Overlay gradiente verde */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/60 to-transparent" />
+
+      {/* Conteúdo */}
+      <div className="relative z-10 container flex items-center" style={{ minHeight: '90vh' }}>
+        <div className="max-w-xl py-24">
+          <span className="inline-block rounded-full bg-accent text-white text-sm font-bold px-5 py-2 mb-6 uppercase tracking-wider">
+            Novidades 2026
           </span>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight">
-            Compre local,<br />receba rápido.
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-[1.0] mb-6 tracking-tight">
+            Compre local,<br />receba<br />rápido.
           </h1>
-          <p className="text-white/80 text-lg md:text-xl mb-10 leading-relaxed max-w-lg">
-            Descubra produtos incríveis de lojas da sua cidade. Entrega rápida, retirada na loja e pagamento seguro.
+          <p className="text-white/85 text-xl mb-10 leading-relaxed">
+            Produtos incríveis de lojas da sua cidade.<br />
+            Entrega no mesmo dia, retirada na loja.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-full px-10 h-14 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" asChild>
-              <Link to="/produtos">Explorar Produtos</Link>
+            <Button size="lg" asChild
+              className="bg-accent hover:bg-accent/90 text-white rounded-none px-10 h-14 text-base font-bold uppercase tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5">
+              <Link to="/produtos">Ver Produtos</Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full border-2 border-white/40 text-white hover:bg-white/10 h-14 px-8 text-base" asChild>
-              <Link to="/cadastro-lojista">Cadastrar Loja</Link>
+            <Button size="lg" variant="outline" asChild
+              className="rounded-none border-2 border-white text-white hover:bg-white hover:text-primary h-14 px-8 text-base font-bold uppercase tracking-wide transition-all duration-300">
+              <Link to="/cadastro-lojista">Cadastre sua Loja</Link>
             </Button>
           </div>
         </div>
       </div>
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-1/2 h-full opacity-[0.07]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,white_0%,transparent_70%)]" />
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce">
+        <div className="w-0.5 h-10 bg-white/40" />
       </div>
-      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-background to-transparent" />
     </section>
 
-    {/* ═══ MARQUEE / TRUST BAR ═══ */}
-    <section className="border-b bg-card">
-      <div className="container py-5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    {/* ══════════════════════════════════════
+        BARRA DE BENEFÍCIOS
+    ══════════════════════════════════════ */}
+    <section className="bg-primary text-white">
+      <div className="container">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/20">
           {benefits.map(b => (
-            <div key={b.title} className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                <b.icon className="h-5 w-5 text-primary" />
-              </div>
+            <div key={b.title} className="flex items-center gap-3 px-6 py-5">
+              <b.icon className="h-6 w-6 shrink-0 text-accent" />
               <div>
-                <p className="text-sm font-semibold leading-tight">{b.title}</p>
-                <p className="text-xs text-muted-foreground">{b.desc}</p>
+                <p className="text-sm font-bold leading-tight">{b.title}</p>
+                <p className="text-xs text-white/70">{b.desc}</p>
               </div>
             </div>
           ))}
@@ -94,19 +83,130 @@ const Index = () => (
       </div>
     </section>
 
-    {/* ═══ CATEGORY BANNERS GRID (3 cols) ═══ */}
-    <section className="container py-10">
-      <div className="grid md:grid-cols-3 gap-4">
-        {categoryBanners.map(b => (
-          <Link key={b.name} to={b.link} className="group relative rounded-2xl overflow-hidden aspect-[4/3]">
-            <img src={b.image} alt={b.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+    {/* ══════════════════════════════════════
+        BANNER DUPLO — estilo editorial
+    ══════════════════════════════════════ */}
+    <section className="container py-8">
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Banner 1 */}
+        <Link to="/busca?cat=moda" className="group relative overflow-hidden block" style={{ aspectRatio: '3/2' }}>
+          <img
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80"
+            alt="Moda"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 p-8">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent mb-2">Coleção</span>
+            <h3 className="text-3xl font-extrabold text-white leading-tight mb-4">Moda &amp;<br />Estilo</h3>
+            <span className="inline-flex items-center gap-2 bg-white text-foreground text-sm font-bold px-6 py-3 
+              group-hover:bg-accent group-hover:text-white transition-all duration-300">
+              Explorar <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+        </Link>
+
+        {/* Banner 2 */}
+        <Link to="/busca?cat=casa" className="group relative overflow-hidden block" style={{ aspectRatio: '3/2' }}>
+          <img
+            src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80"
+            alt="Casa"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 p-8">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent mb-2">Casa</span>
+            <h3 className="text-3xl font-extrabold text-white leading-tight mb-4">Decoração<br />&amp; Conforto</h3>
+            <span className="inline-flex items-center gap-2 bg-white text-foreground text-sm font-bold px-6 py-3
+              group-hover:bg-accent group-hover:text-white transition-all duration-300">
+              Explorar <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+        </Link>
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════
+        OFERTAS — Produtos em promoção
+    ══════════════════════════════════════ */}
+    <section className="container py-8">
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-widest text-accent mb-1">Imperdível</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Ofertas da Semana</h2>
+        </div>
+        <Link to="/produtos" className="hidden md:flex items-center gap-1.5 text-sm font-bold text-primary hover:text-accent transition-colors uppercase tracking-wide">
+          Ver todas <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {promoProducts.map(p => <ProductCard key={p.id} product={p} />)}
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════
+        BANNER FULL-WIDTH — Cozinha
+    ══════════════════════════════════════ */}
+    <section className="w-full my-4">
+      <Link to="/busca?cat=cozinha" className="group relative block w-full overflow-hidden" style={{ height: '420px' }}>
+        <img
+          src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&q=80"
+          alt="Cozinha"
+          className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-103"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="container">
+            <p className="text-sm font-bold uppercase tracking-widest text-accent mb-3">Categoria em destaque</p>
+            <h2 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">
+              Tudo para<br />sua Cozinha
+            </h2>
+            <span className="inline-flex items-center gap-2 bg-accent text-white text-sm font-bold px-8 py-4 uppercase tracking-wide
+              group-hover:bg-white group-hover:text-foreground transition-all duration-300">
+              Ver Produtos <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+        </div>
+      </Link>
+    </section>
+
+    {/* ══════════════════════════════════════
+        MAIS VENDIDOS
+    ══════════════════════════════════════ */}
+    <section className="container py-8">
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-widest text-accent mb-1">Top</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Mais Vendidos</h2>
+        </div>
+        <Link to="/produtos" className="hidden md:flex items-center gap-1.5 text-sm font-bold text-primary hover:text-accent transition-colors uppercase tracking-wide">
+          Ver todos <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {bestSellers.map(p => <ProductCard key={p.id} product={p} />)}
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════
+        BANNER TRIPLO — 3 categorias lado a lado
+    ══════════════════════════════════════ */}
+    <section className="container py-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Cama, Mesa & Banho', img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', link: '/busca?cat=cama-mesa-banho', tag: 'Até 30% OFF' },
+          { label: 'Eletrônicos', img: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=600&q=80', link: '/busca?cat=eletronicos', tag: 'Tech' },
+          { label: 'Beleza', img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&q=80', link: '/busca?cat=beleza', tag: 'Beauty' },
+        ].map(b => (
+          <Link key={b.label} to={b.link} className="group relative overflow-hidden block rounded-none" style={{ aspectRatio: '4/5' }}>
+            <img src={b.img} alt={b.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
             <div className="absolute top-4 left-4">
-              <span className="inline-block rounded-full bg-accent text-white text-xs font-bold px-3 py-1">{b.tag}</span>
+              <span className="bg-accent text-white text-xs font-bold px-3 py-1.5 uppercase tracking-wide">{b.tag}</span>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <h3 className="text-xl font-bold text-white mb-1">{b.name}</h3>
-              <span className="inline-flex items-center gap-1 text-sm text-white/80 font-medium group-hover:text-white transition-colors">
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <h3 className="text-xl font-extrabold text-white mb-3 leading-tight">{b.label}</h3>
+              <span className="flex items-center gap-1.5 text-sm text-white/80 font-bold uppercase tracking-wide group-hover:text-accent transition-colors">
                 Ver produtos <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>
             </div>
@@ -115,144 +215,104 @@ const Index = () => (
       </div>
     </section>
 
-    {/* ═══ PROMOÇÕES ═══ */}
-    <section className="container py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">🔥 Ofertas Imperdíveis</h2>
-          <p className="text-sm text-muted-foreground mt-1">Aproveite antes que acabe</p>
-        </div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/produtos?filter=promo" className="flex items-center gap-1 text-primary font-medium">
-            Ver todas <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {promoProducts.map(p => <ProductCard key={p.id} product={p} />)}
-      </div>
-    </section>
-
-    {/* ═══ BANNER DUPLO LIFESTYLE ═══ */}
-    <section className="container py-6">
-      <div className="grid md:grid-cols-2 gap-4">
-        {heroBanners.map((b, i) => (
-          <Link key={i} to={b.link} className="group relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[16/10]">
-            <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-center p-6 md:p-10">
-              <h3 className="text-xl md:text-3xl font-extrabold text-white leading-tight mb-2">{b.title}</h3>
-              <p className="text-sm md:text-base text-white/80 mb-4 max-w-xs">{b.subtitle}</p>
-              <span className="inline-flex items-center gap-2 bg-white text-foreground font-semibold text-sm px-5 py-2.5 rounded-full w-fit group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                {b.cta} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-
-    {/* ═══ MAIS VENDIDOS ═══ */}
-    <section className="container py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">⭐ Mais Vendidos</h2>
-          <p className="text-sm text-muted-foreground mt-1">Os favoritos dos nossos clientes</p>
-        </div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/produtos?sort=sold" className="flex items-center gap-1 text-primary font-medium">
-            Ver todos <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {bestSellers.slice(0, 4).map(p => <ProductCard key={p.id} product={p} />)}
-      </div>
-    </section>
-
-    {/* ═══ BANNER CTA FULLWIDTH ═══ */}
-    <section className="my-6">
+    {/* ══════════════════════════════════════
+        NOVIDADES
+    ══════════════════════════════════════ */}
+    <section className="bg-secondary/50 py-12 my-4">
       <div className="container">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-hero py-16 md:py-24 px-8 md:px-16">
-          <div className="relative z-10 max-w-lg">
-            <h2 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-4">
-              Tem uma loja?<br />Venda na Compra Aí!
-            </h2>
-            <p className="text-white/80 text-base md:text-lg mb-8 leading-relaxed">
-              Cadastre sua loja gratuitamente e comece a vender para toda a cidade. Sem mensalidade no plano básico.
-            </p>
-            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-full px-10 h-13 text-base font-semibold shadow-lg" asChild>
-              <Link to="/cadastro-lojista">Cadastrar Minha Loja</Link>
-            </Button>
-          </div>
-          <div className="absolute top-0 right-0 w-2/3 h-full opacity-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,white_0%,transparent_70%)]" />
-          </div>
-          <div className="absolute -bottom-8 -right-8 w-40 h-40 rounded-full bg-white/5" />
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/5" />
-        </div>
-      </div>
-    </section>
-
-    {/* ═══ CATEGORIAS ═══ */}
-    <section className="container py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Categorias</h2>
-          <p className="text-sm text-muted-foreground mt-1">Encontre o que procura</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-        {categories.slice(0, 12).map(c => (
-          <Link key={c.id} to={`/busca?cat=${c.id}`} className="group flex flex-col items-center gap-3 rounded-2xl border bg-card p-5 text-center shadow-card hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:border-primary/30">
-            <span className="text-4xl transition-transform duration-300 group-hover:scale-110">{c.icon}</span>
-            <span className="text-xs font-semibold">{c.name}</span>
-          </Link>
-        ))}
-      </div>
-    </section>
-
-    {/* ═══ NOVIDADES ═══ */}
-    <section className="bg-secondary/40 py-10">
-      <div className="container">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">🆕 Acabou de Chegar</h2>
-            <p className="text-sm text-muted-foreground mt-1">Produtos recém adicionados</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-accent mb-1">Acabou de chegar</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Novidades</h2>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {newProducts.slice(0, 4).map(p => <ProductCard key={p.id} product={p} />)}
+          {newProducts.map(p => <ProductCard key={p.id} product={p} />)}
         </div>
       </div>
     </section>
 
-    {/* ═══ LOJAS PARTICIPANTES ═══ */}
-    <section className="container py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">🏪 Lojas Participantes</h2>
-          <p className="text-sm text-muted-foreground mt-1">Conheça quem faz o Compra Aí acontecer</p>
+    {/* ══════════════════════════════════════
+        BANNER CTA LOJISTA — full width
+    ══════════════════════════════════════ */}
+    <section className="w-full my-4">
+      <div className="relative overflow-hidden" style={{ height: '360px' }}>
+        <img
+          src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80"
+          alt="Lojista"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-primary/85" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="container flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-widest text-accent mb-3">Para Lojistas</p>
+              <h2 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-4">
+                Sua loja no<br />marketplace local.
+              </h2>
+              <p className="text-white/75 text-lg">Cadastre gratuitamente e venda para toda a cidade.</p>
+            </div>
+            <div className="shrink-0">
+              <Button size="lg" asChild
+                className="bg-accent hover:bg-white hover:text-foreground text-white rounded-none px-10 h-14 text-base font-bold uppercase tracking-wide transition-all duration-300">
+                <Link to="/cadastro-lojista">Quero Vender</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {stores.map(s => (
-          <Link key={s.id} to={`/loja/${s.id}`} className="group flex items-center gap-4 rounded-2xl bg-card p-5 border shadow-card hover:shadow-elevated transition-all duration-300 hover:-translate-y-0.5">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-hero text-xl font-bold text-white">
-              {s.name.charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{s.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{s.category}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs text-accent font-semibold">★ {s.rating}</span>
-                <span className="text-xs text-muted-foreground">· {s.productsCount} produtos</span>
-              </div>
-            </div>
+    </section>
+
+    {/* ══════════════════════════════════════
+        CATEGORIAS — grade de ícones
+    ══════════════════════════════════════ */}
+    <section className="container py-12">
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-widest text-accent mb-1">Navegue por</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Categorias</h2>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        {categories.map(c => (
+          <Link key={c.id} to={`/busca?cat=${c.id}`}
+            className="group flex flex-col items-center gap-3 border-2 border-transparent hover:border-primary bg-card p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+            <span className="text-4xl transition-transform duration-300 group-hover:scale-110">{c.icon}</span>
+            <span className="text-xs font-bold uppercase tracking-wide">{c.name}</span>
           </Link>
         ))}
       </div>
     </section>
+
+    {/* ══════════════════════════════════════
+        LOJAS PARTICIPANTES
+    ══════════════════════════════════════ */}
+    <section className="bg-primary py-12">
+      <div className="container">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-widest text-accent mb-1">Parceiros</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Lojas Participantes</h2>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stores.map(s => (
+            <Link key={s.id} to={`/loja/${s.id}`}
+              className="group flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-accent text-2xl font-extrabold text-white">
+                {s.name.charAt(0)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-extrabold text-white truncate group-hover:text-accent transition-colors">{s.name}</p>
+                <p className="text-xs text-white/60 truncate">{s.category}</p>
+                <p className="text-xs text-accent font-bold mt-1">★ {s.rating} · {s.productsCount} itens</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+
   </MarketplaceLayout>
 );
 
