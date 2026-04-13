@@ -231,6 +231,7 @@ interface SiteConfigCtx {
   texts: SiteTexts;
   setTexts: (t: SiteTexts) => void;
   getBanner: (pos: SectionBanner['position']) => SectionBanner | undefined;
+  getBanners: (pos: SectionBanner['position']) => SectionBanner[];
 }
 
 const Ctx = createContext<SiteConfigCtx | null>(null);
@@ -253,8 +254,11 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
   const getBanner = (pos: SectionBanner['position']) =>
     sectionBanners.find(b => b.position === pos && b.is_active);
 
+  const getBanners = (pos: SectionBanner['position']) =>
+    sectionBanners.filter(b => b.position === pos && b.is_active);
+
   return (
-    <Ctx.Provider value={{ heroSlides, setHeroSlides, sectionBanners, setSectionBanners, texts, setTexts, getBanner }}>
+    <Ctx.Provider value={{ heroSlides, setHeroSlides, sectionBanners, setSectionBanners, texts, setTexts, getBanner, getBanners }}>
       {children}
     </Ctx.Provider>
   );

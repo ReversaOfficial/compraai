@@ -18,12 +18,12 @@ import { products } from '@/data/mock';
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const POSITIONS: { value: BannerPosition; label: string }[] = [
-  { value: 'dual_left', label: 'Banner Duplo — Esquerda' },
-  { value: 'dual_right', label: 'Banner Duplo — Direita' },
-  { value: 'fullwidth', label: 'Banner Full Width' },
-  { value: 'triple_1', label: 'Banner Triplo — 1' },
-  { value: 'triple_2', label: 'Banner Triplo — 2' },
-  { value: 'triple_3', label: 'Banner Triplo — 3' },
+  { value: 'dual_left', label: 'Banner Duplo Esquerda' },
+  { value: 'dual_right', label: 'Banner Duplo Direita' },
+  { value: 'fullwidth', label: 'Banner Central' },
+  { value: 'triple_1', label: 'Banner Produto Rodapé Esquerda' },
+  { value: 'triple_2', label: 'Banner Produto Rodapé Central' },
+  { value: 'triple_3', label: 'Banner Produto Rodapé Direita' },
 ];
 
 const PaymentStep = ({ amount, onPaid, onBack }: {
