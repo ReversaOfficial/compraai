@@ -114,11 +114,11 @@ const HeroCarousel = () => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const Index = () => {
-  const { texts, getBanner } = useSiteConfig();
+  const { texts, getBanner, getBanners } = useSiteConfig();
 
   const dualLeft = getBanner('dual_left');
   const dualRight = getBanner('dual_right');
-  const fullwidth = getBanner('fullwidth');
+  const centralBanners = getBanners('fullwidth');
   const triple1 = getBanner('triple_1');
   const triple2 = getBanner('triple_2');
   const triple3 = getBanner('triple_3');
