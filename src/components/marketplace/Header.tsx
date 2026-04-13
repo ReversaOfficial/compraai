@@ -18,7 +18,7 @@ const Header = () => {
   const [suggestions, setSuggestions] = useState<{ type: string; label: string; link: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLFormElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
