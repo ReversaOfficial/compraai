@@ -66,8 +66,8 @@ const setStoredUser = (user: UserProfile | null) => {
   if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   else localStorage.removeItem(STORAGE_KEY);
 };
-const getAllUsers = (): Array<(UserProfile & { password: string })> => {
-  try { const r = localStorage.getItem(USERS_KEY); return r ? JSON.parse(r) as Array<(UserProfile & { password: string })> : []; } catch { return []; }
+const getAllUsers = (): any[] => {
+  try { const r = localStorage.getItem(USERS_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
 };
 const saveUser = (user: UserProfile, password: string) => {
   const users = getAllUsers();

@@ -126,7 +126,7 @@ const Index = () => {
   return (
     <MarketplaceLayout>
 
-      {/* ══ HERO CAROUSEL ══ */}
+      {/* ══ BANNER PRINCIPAL ══ */}
       <HeroCarousel />
 
       {/* ══ BARRA BENEFÍCIOS ══ */}
@@ -188,23 +188,9 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ══ BANNER FULL-WIDTH ══ */}
-      {fullwidth && (
-        <section className="w-full my-4">
-          <Link to={fullwidth.link} className="group relative block w-full overflow-hidden" style={{ height: '420px' }}>
-            <img src={fullwidth.image} alt={fullwidth.title} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-            <div className="absolute inset-0 flex items-center">
-              <div className="container">
-                <p className="text-sm font-bold uppercase tracking-widest text-accent mb-3">{fullwidth.tag}</p>
-                <h2 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">{fullwidth.title}</h2>
-                <span className="inline-flex items-center gap-2 bg-accent text-white text-sm font-bold px-8 py-4 uppercase tracking-wide group-hover:bg-white group-hover:text-foreground transition-all duration-300">
-                  {fullwidth.cta} <ArrowRight className="h-4 w-4" />
-                </span>
-              </div>
-            </div>
-          </Link>
-        </section>
+      {/* ══ BANNER CENTRAL (SLIDER) ══ */}
+      {centralBanners.length > 0 && (
+        <CentralBannerSlider banners={centralBanners} />
       )}
 
       {/* ══ MAIS VENDIDOS ══ */}
@@ -223,7 +209,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ══ BANNER TRIPLO ══ */}
+      {/* ══ BANNER PRODUTO RODAPÉ ══ */}
       {(triple1 || triple2 || triple3) && (
         <section className="container py-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
