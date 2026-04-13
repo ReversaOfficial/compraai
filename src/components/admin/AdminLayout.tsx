@@ -1,43 +1,51 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingBag, DollarSign, Image, Settings, LogOut, Menu, Palette } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Store, Package, ShoppingBag, DollarSign, Image, Settings, LogOut, Menu, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/lojistas', icon: Store, label: 'Lojistas' },
+  { to: '/admin/lojistas', icon: Store, label: 'Lojas' },
   { to: '/admin/produtos', icon: Package, label: 'Produtos' },
   { to: '/admin/pedidos', icon: ShoppingBag, label: 'Pedidos' },
   { to: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
+  { to: '/admin/planos', icon: CreditCard, label: 'Planos' },
   { to: '/admin/banners', icon: Image, label: 'Banners' },
-  { to: '/admin/planos', icon: Settings, label: 'Planos' },
-  { to: '/admin/configuracoes', icon: Palette, label: 'Configurações' },
+  { to: '/admin/pagamentos', icon: DollarSign, label: 'Pagamentos' },
+  { to: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
 const Sidebar = ({ mobile }: { mobile?: boolean }) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const handleSignOut = () => { signOut(); navigate('/login'); };
+
   return (
     <div className={`flex flex-col h-full ${mobile ? '' : 'w-60 border-r bg-card'}`}>
       <div className="p-4 border-b">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hero">
-            <span className="text-sm font-bold text-primary-foreground">V</span>
+            <span className="text-sm font-bold text-primary-foreground">C</span>
           </div>
-          <span className="font-bold">Vitrine</span>
-          <span className="text-xs text-destructive ml-auto font-medium">Admin</span>
+          <span className="font-bold">Compra Aí</span>
+          <Badge variant="destructive" className="ml-auto text-[10px] py-0">Admin</Badge>
         </Link>
       </div>
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5">
         {navItems.map(n => (
-          <Link key={n.to} to={n.to} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${pathname === n.to ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted'}`}>
+          <Link key={n.to} to={n.to}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${pathname === n.to ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted'}`}>
             <n.icon className="h-4 w-4" />
             {n.label}
           </Link>
         ))}
       </nav>
       <div className="p-3 border-t">
-        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" asChild>
-          <Link to="/"><LogOut className="h-4 w-4 mr-2" /> Sair</Link>
+        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" /> Sair
         </Button>
       </div>
     </div>

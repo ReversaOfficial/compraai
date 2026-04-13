@@ -1,52 +1,82 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, DollarSign, Settings, BarChart3, LogOut, Menu } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingBag, DollarSign, Settings, LogOut, Menu, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
+import { useAuth, SellerProfile } from '@/contexts/AuthContext';
+import { usePlans } from '@/contexts/PlansContext';
 
 const navItems = [
   { to: '/lojista', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/lojista/produtos', icon: Package, label: 'Produtos' },
   { to: '/lojista/pedidos', icon: ShoppingBag, label: 'Pedidos' },
   { to: '/lojista/financeiro', icon: DollarSign, label: 'Financeiro' },
+  { to: '/lojista/planos', icon: CreditCard, label: 'Meu Plano' },
   { to: '/lojista/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
 const Sidebar = ({ mobile }: { mobile?: boolean }) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { getPlan } = usePlans();
+  const seller = user as SellerProfile;
+  const plan = seller ? getPlan(seller.plan_id) : null;
+  const productCount = 0; // TODO: connect to real product count
+  const pct = plan ? Math.round((productCount / seller.plan_limit) * 100) : 0;
+  const nearLimit = pct >= 80;
+
+  const handleSignOut = () => { signOut(); navigate('/'); };
+
   return (
     <div className={`flex flex-col h-full ${mobile ? '' : 'w-60 border-r bg-card'}`}>
       <div className="p-4 border-b">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hero">
-            <span className="text-sm font-bold text-primary-foreground">V</span>
+            <span className="text-sm font-bold text-primary-foreground">C</span>
           </div>
-          <span className="font-bold">Vitrine</span>
+          <span className="font-bold">Compra Aí</span>
           <span className="text-xs text-muted-foreground ml-auto">Lojista</span>
         </Link>
+        {seller && (
+          <div className="mt-2 text-xs text-muted-foreground truncate">{seller.store_name}</div>
+        )}
       </div>
+
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map(n => (
-          <Link key={n.to} to={n.to} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${pathname === n.to ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted'}`}>
+          <Link key={n.to} to={n.to}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              pathname === n.to ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted'
+            }`}>
             <n.icon className="h-4 w-4" />
             {n.label}
           </Link>
         ))}
       </nav>
+
       {/* Plan usage */}
-      <div className="p-4 border-t">
-        <div className="rounded-lg bg-secondary/50 p-3 space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="font-medium">Plano Premium</span>
-            <span className="text-muted-foreground">45/100</span>
-          </div>
-          <Progress value={45} className="h-1.5" />
-          <p className="text-xs text-muted-foreground">55 produtos restantes</p>
+      {seller && (
+        <div className="p-4 border-t">
+          <Link to="/lojista/planos" className={`block rounded-lg p-3 space-y-2 transition-colors ${nearLimit ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950' : 'bg-secondary/50 hover:bg-secondary'}`}>
+            <div className="flex justify-between text-xs items-center">
+              <span className="font-medium">{plan?.name ?? seller.plan_id}</span>
+              <span className={nearLimit ? 'text-amber-600 font-bold' : 'text-muted-foreground'}>
+                {productCount}/{seller.plan_limit}
+              </span>
+            </div>
+            <Progress value={pct} className="h-1.5" />
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">{seller.plan_limit - productCount} restantes</p>
+              {nearLimit && <AlertCircle className="h-3.5 w-3.5 text-amber-500" />}
+            </div>
+          </Link>
         </div>
-      </div>
+      )}
+
       <div className="p-3 border-t">
-        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" asChild>
-          <Link to="/"><LogOut className="h-4 w-4 mr-2" /> Sair</Link>
+        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" /> Sair
         </Button>
       </div>
     </div>
