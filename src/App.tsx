@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SiteConfigProvider } from "@/contexts/SiteConfigContext";
 import { PlansProvider } from "@/contexts/PlansContext";
+import { MediaProvider } from "@/contexts/MediaContext";
 
 import Index from "./pages/Index";
 import ProductsPage from "./pages/ProductsPage";
@@ -27,6 +28,7 @@ import SellerOrders from "./pages/seller/SellerOrders";
 import SellerFinancials from "./pages/seller/SellerFinancials";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerPlans from "./pages/seller/SellerPlans";
+import SellerMedia from "./pages/seller/SellerMedia";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
@@ -47,51 +49,54 @@ const App = () => (
     <TooltipProvider>
       <SiteConfigProvider>
         <PlansProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              <CartProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    {/* Public */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/produtos" element={<ProductsPage />} />
-                    <Route path="/produto/:id" element={<ProductDetailPage />} />
-                    <Route path="/carrinho" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/busca" element={<SearchPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/cadastro" element={<SignupPage />} />
-                    <Route path="/cadastro-lojista" element={<SellerSignupPage />} />
-                    <Route path="/conta" element={<AccountPage />} />
-                    <Route path="/loja/:id" element={<StorePage />} />
+          <MediaProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                <CartProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      {/* Public */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="/produtos" element={<ProductsPage />} />
+                      <Route path="/produto/:id" element={<ProductDetailPage />} />
+                      <Route path="/carrinho" element={<CartPage />} />
+                      <Route path="/checkout" element={<CheckoutPage />} />
+                      <Route path="/busca" element={<SearchPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/cadastro" element={<SignupPage />} />
+                      <Route path="/cadastro-lojista" element={<SellerSignupPage />} />
+                      <Route path="/conta" element={<AccountPage />} />
+                      <Route path="/loja/:id" element={<StorePage />} />
 
-                    {/* Seller */}
-                    <Route path="/lojista" element={<SellerDashboard />} />
-                    <Route path="/lojista/produtos" element={<SellerProducts />} />
-                    <Route path="/lojista/pedidos" element={<SellerOrders />} />
-                    <Route path="/lojista/financeiro" element={<SellerFinancials />} />
-                    <Route path="/lojista/planos" element={<SellerPlans />} />
-                    <Route path="/lojista/configuracoes" element={<SellerSettings />} />
+                      {/* Seller */}
+                      <Route path="/lojista" element={<SellerDashboard />} />
+                      <Route path="/lojista/produtos" element={<SellerProducts />} />
+                      <Route path="/lojista/pedidos" element={<SellerOrders />} />
+                      <Route path="/lojista/financeiro" element={<SellerFinancials />} />
+                      <Route path="/lojista/planos" element={<SellerPlans />} />
+                      <Route path="/lojista/midia" element={<SellerMedia />} />
+                      <Route path="/lojista/configuracoes" element={<SellerSettings />} />
 
-                    {/* Admin */}
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/lojistas" element={<AdminStores />} />
-                    <Route path="/admin/produtos" element={<AdminProducts />} />
-                    <Route path="/admin/pedidos" element={<AdminOrders />} />
-                    <Route path="/admin/financeiro" element={<AdminFinancials />} />
-                    <Route path="/admin/planos" element={<AdminPlans />} />
-                    <Route path="/admin/banners" element={<AdminBanners />} />
-                    <Route path="/admin/pagamentos" element={<AdminPayments />} />
-                    <Route path="/admin/configuracoes" element={<AdminSettings />} />
+                      {/* Admin */}
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/admin/lojistas" element={<AdminStores />} />
+                      <Route path="/admin/produtos" element={<AdminProducts />} />
+                      <Route path="/admin/pedidos" element={<AdminOrders />} />
+                      <Route path="/admin/financeiro" element={<AdminFinancials />} />
+                      <Route path="/admin/planos" element={<AdminPlans />} />
+                      <Route path="/admin/banners" element={<AdminBanners />} />
+                      <Route path="/admin/pagamentos" element={<AdminPayments />} />
+                      <Route path="/admin/configuracoes" element={<AdminSettings />} />
 
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </CartProvider>
-            </AuthProvider>
-          </LanguageProvider>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </BrowserRouter>
+                </CartProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </MediaProvider>
         </PlansProvider>
       </SiteConfigProvider>
     </TooltipProvider>
