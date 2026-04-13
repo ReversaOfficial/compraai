@@ -14,12 +14,12 @@ import { toast } from 'sonner';
 import { useSiteConfig, HeroSlide, SectionBanner } from '@/contexts/SiteConfigContext';
 
 const positionLabel: Record<string, string> = {
-  dual_left: 'Banner Duplo — Esquerda',
-  dual_right: 'Banner Duplo — Direita',
-  fullwidth: 'Banner Full Width',
-  triple_1: 'Banner Triplo — 1',
-  triple_2: 'Banner Triplo — 2',
-  triple_3: 'Banner Triplo — 3',
+  dual_left: 'Banner Duplo Esquerda',
+  dual_right: 'Banner Duplo Direita',
+  fullwidth: 'Banner Central',
+  triple_1: 'Banner Produto Rodapé Esquerda',
+  triple_2: 'Banner Produto Rodapé Central',
+  triple_3: 'Banner Produto Rodapé Direita',
 };
 
 // ─── Hero Slides Tab ──────────────────────────────────────────────────────────
@@ -526,7 +526,7 @@ const AdminBanners = () => (
 
       <Tabs defaultValue="hero">
         <TabsList className="mb-6 flex-wrap h-auto">
-          <TabsTrigger value="hero" className="gap-2"><MonitorPlay className="h-4 w-4" /> Carrossel Hero</TabsTrigger>
+          <TabsTrigger value="hero" className="gap-2"><MonitorPlay className="h-4 w-4" /> Banner Principal</TabsTrigger>
           <TabsTrigger value="sections" className="gap-2"><LayoutPanelLeft className="h-4 w-4" /> Banners de Seção</TabsTrigger>
           <TabsTrigger value="pricing" className="gap-2"><Image className="h-4 w-4" /> Preços de Mídia</TabsTrigger>
           <TabsTrigger value="purchases" className="gap-2"><Plus className="h-4 w-4" /> Compras dos Lojistas</TabsTrigger>
