@@ -71,15 +71,21 @@ const ReviewSection = ({ type, targetId }: ReviewSectionProps) => {
   const handleSubmit = async () => {
     if (!user || rating === 0) return;
     setSubmitting(true);
-    const row: Record<string, unknown> = { user_id: user.id, [idCol]: targetId, rating, comment };
-    await supabase.from(table).insert(row as any);
-    
-    // Update avg rating
-    const { data: all } = await supabase.from(table).select('rating').eq(idCol, targetId);
-    if (all && all.length > 0) {
-      const avg = all.reduce((s, r) => s + r.rating, 0) / all.length;
-      const targetTable = type === 'product' ? 'products' : 'stores';
-      await supabase.from(targetTable).update({ avg_rating: Math.round(avg * 10) / 10, review_count: all.length } as any).eq('id', targetId);
+
+    if (type === 'product') {
+      await supabase.from('product_reviews').insert({ user_id: user.id, product_id: targetId, rating, comment });
+      const { data: all } = await supabase.from('product_reviews').select('rating').eq('product_id', targetId);
+      if (all && all.length > 0) {
+        const avg = all.reduce((s, r) => s + r.rating, 0) / all.length;
+        await supabase.from('products').update({ avg_rating: Math.round(avg * 10) / 10, review_count: all.length } as any).eq('id', targetId);
+      }
+    } else {
+      await supabase.from('store_reviews').insert({ user_id: user.id, store_id: targetId, rating, comment });
+      const { data: all } = await supabase.from('store_reviews').select('rating').eq('store_id', targetId);
+      if (all && all.length > 0) {
+        const avg = all.reduce((s, r) => s + r.rating, 0) / all.length;
+        await supabase.from('stores').update({ avg_rating: Math.round(avg * 10) / 10, review_count: all.length } as any).eq('id', targetId);
+      }
     }
     
     setComment('');
@@ -87,7 +93,10 @@ const ReviewSection = ({ type, targetId }: ReviewSectionProps) => {
     setHasReviewed(true);
     setSubmitting(false);
     // Refresh reviews
-    const { data } = await supabase.from(table).select('*').eq(idCol, targetId).order('created_at', { ascending: false });
+    const refreshQuery = type === 'product'
+      ? supabase.from('product_reviews').select('*').eq('product_id', targetId).order('created_at', { ascending: false })
+      : supabase.from('store_reviews').select('*').eq('store_id', targetId).order('created_at', { ascending: false });
+    const { data } = await refreshQuery;
     setReviews((data || []).map(r => ({ ...r, comment: r.comment || '', user_name: 'Cliente' })));
   };
 
