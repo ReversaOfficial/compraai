@@ -33,11 +33,10 @@ const ReviewSection = ({ type, targetId }: ReviewSectionProps) => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from(table)
-        .select('*')
-        .eq(idCol, targetId)
-        .order('created_at', { ascending: false });
+      const query = type === 'product'
+        ? supabase.from('product_reviews').select('*').eq('product_id', targetId).order('created_at', { ascending: false })
+        : supabase.from('store_reviews').select('*').eq('store_id', targetId).order('created_at', { ascending: false });
+      const { data } = await query;
       
       const mapped = (data || []).map(r => ({
         ...r,
