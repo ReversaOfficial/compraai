@@ -1,12 +1,15 @@
 import { useParams, Link } from 'react-router-dom';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
 import ProductCard from '@/components/marketplace/ProductCard';
+import ReviewSection from '@/components/marketplace/ReviewSection';
 import { stores, products } from '@/data/mock';
-import { MapPin, Phone, Star, Package, Clock, Instagram, MessageCircle, ArrowLeft, ChevronDown, Grid, List } from 'lucide-react';
+import { MapPin, Phone, Star, Package, Clock, Instagram, MessageCircle, ArrowLeft, ChevronDown, Grid, List, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 
 const BANNER_FALLBACKS: Record<string, string> = {
   s1: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80',
@@ -16,6 +19,8 @@ const BANNER_FALLBACKS: Record<string, string> = {
 
 const StorePage = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const { isStoreFav, toggleStoreFav } = useFavorites();
   const store = stores.find(s => s.id === id);
   const allProducts = products.filter(p => p.storeId === id && p.isActive);
   const [search, setSearch] = useState('');
@@ -52,12 +57,19 @@ const StorePage = () => {
             <Link to="/"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link>
           </Button>
         </div>
+        {user && id && (
+          <button
+            onClick={() => toggleStoreFav(id)}
+            className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white transition-colors"
+          >
+            <Heart className={`h-5 w-5 ${isStoreFav(id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
+          </button>
+        )}
       </div>
 
       {/* ── STORE IDENTITY ── */}
       <div className="container relative">
         <div className="flex items-end gap-4 -mt-12 mb-6">
-          {/* Logo */}
           <div className="h-24 w-24 rounded-2xl border-4 border-background bg-card flex items-center justify-center text-4xl font-extrabold text-primary shadow-lg shrink-0 overflow-hidden">
             {store.logo
               ? <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
@@ -117,7 +129,6 @@ const StorePage = () => {
 
       {/* ── PRODUCTS ── */}
       <div className="container pb-12">
-        {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-xs">
             <Input placeholder="Buscar nesta loja..." value={search}
@@ -181,6 +192,13 @@ const StorePage = () => {
             <p className="font-medium">Nenhum produto encontrado</p>
             <p className="text-sm mt-1">Tente outro filtro ou busca</p>
           </div>
+        )}
+
+        {/* Store Reviews */}
+        {id && (
+          <section className="mt-12 border-t pt-8">
+            <ReviewSection type="store" targetId={id} />
+          </section>
         )}
       </div>
     </MarketplaceLayout>
