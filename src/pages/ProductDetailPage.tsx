@@ -1,9 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
-import { ShoppingCart, Store, Truck, MapPin, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Store, Truck, MapPin, ArrowLeft, Heart } from 'lucide-react';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
 import ProductCard from '@/components/marketplace/ProductCard';
+import ReviewSection from '@/components/marketplace/ReviewSection';
 import { products } from '@/data/mock';
 import { useCart } from '@/contexts/CartContext';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -12,6 +15,8 @@ const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const { isProductFav, toggleProductFav } = useFavorites();
   const product = products.find(p => p.id === id);
 
   if (!product) return (
@@ -35,8 +40,16 @@ const ProductDetailPage = () => {
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Image */}
-          <div className="aspect-square overflow-hidden rounded-xl bg-secondary/30">
+          <div className="aspect-square overflow-hidden rounded-xl bg-secondary/30 relative">
             <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+            {user && (
+              <button
+                onClick={() => toggleProductFav(product.id)}
+                className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white transition-colors"
+              >
+                <Heart className={`h-5 w-5 ${isProductFav(product.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
+              </button>
+            )}
           </div>
 
           {/* Info */}
@@ -90,6 +103,11 @@ const ProductDetailPage = () => {
             </Button>
           </div>
         </div>
+
+        {/* Reviews */}
+        <section className="mt-12 border-t pt-8">
+          <ReviewSection type="product" targetId={product.id} />
+        </section>
 
         {/* Related */}
         {related.length > 0 && (

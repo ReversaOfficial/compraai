@@ -39,8 +39,12 @@ import AdminPlans from "./pages/admin/AdminPlans";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminPopup from "./pages/admin/AdminPopup";
 
 import NotFound from "./pages/NotFound";
+import PromoPopup from "./components/marketplace/PromoPopup";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +59,7 @@ const App = () => (
                 <CartProvider>
                   <Toaster />
                   <Sonner />
+                  <PromoPopup />
                   <BrowserRouter>
                     <Routes>
                       {/* Public */}
@@ -88,6 +93,9 @@ const App = () => (
                       <Route path="/admin/planos" element={<AdminPlans />} />
                       <Route path="/admin/banners" element={<AdminBanners />} />
                       <Route path="/admin/pagamentos" element={<AdminPayments />} />
+                      <Route path="/admin/avaliacoes" element={<AdminReviews />} />
+                      <Route path="/admin/notificacoes" element={<AdminNotifications />} />
+                      <Route path="/admin/popup" element={<AdminPopup />} />
                       <Route path="/admin/configuracoes" element={<AdminSettings />} />
 
                       <Route path="*" element={<NotFound />} />

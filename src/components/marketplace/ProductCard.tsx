@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import type { Product } from '@/data/mock';
 import { useCart } from '@/contexts/CartContext';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { categories } from '@/data/mock';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const { isProductFav, toggleProductFav } = useFavorites();
   const discount = product.promoPrice
     ? Math.round((1 - product.promoPrice / product.price) * 100)
     : 0;
@@ -37,6 +41,16 @@ const ProductCard = ({ product }: { product: Product }) => {
           <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2.5 py-1.5">
             {cat.icon} {cat.name}
           </div>
+        )}
+
+        {/* Favorite button */}
+        {user && (
+          <button
+            onClick={(e) => { e.preventDefault(); toggleProductFav(product.id); }}
+            className="absolute top-8 right-1 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition-colors"
+          >
+            <Heart className={`h-4 w-4 ${isProductFav(product.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
+          </button>
         )}
 
         {/* Overlay hover com botões */}
