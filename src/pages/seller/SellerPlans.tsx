@@ -288,6 +288,9 @@ const SellerPlans = () => {
               {/* Credit Card */}
               {payMethod === 'credit_card' && (
                 <div className="space-y-3">
+                  <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-700 font-medium text-center">
+                    💳 Pagamento à vista — sem parcelamento
+                  </div>
                   <div className="space-y-1.5">
                     <Label>Número do cartão</Label>
                     <Input placeholder="0000 0000 0000 0000" value={cardNum}

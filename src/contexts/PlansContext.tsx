@@ -46,11 +46,11 @@ const PAYMENT_CONFIG_KEY = 'compraai_payment_config';
 const PAYMENTS_KEY = 'compraai_payments';
 
 const DEFAULT_PLANS: Plan[] = [
-  { id: 'plan_10',  name: 'Starter',      product_limit: 10,  monthly_price: 29.90,  annual_price: 287.04, annual_monthly_price: 23.92, discount_pct: 20, color: 'from-slate-400 to-slate-500' },
-  { id: 'plan_20',  name: 'Básico',       product_limit: 20,  monthly_price: 49.90,  annual_price: 478.80, annual_monthly_price: 39.90, discount_pct: 20, color: 'from-emerald-400 to-emerald-600' },
-  { id: 'plan_30',  name: 'Profissional', product_limit: 30,  monthly_price: 79.90,  annual_price: 766.80, annual_monthly_price: 63.90, discount_pct: 20, color: 'from-blue-400 to-blue-600', popular: true },
-  { id: 'plan_50',  name: 'Business',     product_limit: 50,  monthly_price: 119.90, annual_price: 1150.56, annual_monthly_price: 95.88, discount_pct: 20, color: 'from-violet-400 to-violet-600' },
-  { id: 'plan_100', name: 'Enterprise',   product_limit: 100, monthly_price: 199.90, annual_price: 1919.04, annual_monthly_price: 159.92, discount_pct: 20, color: 'from-amber-400 to-orange-500' },
+  { id: 'plan_10',  name: 'Starter',      product_limit: 10,  monthly_price: 29.90,  annual_price: 304.98, annual_monthly_price: 25.42, discount_pct: 15, color: 'from-slate-400 to-slate-500' },
+  { id: 'plan_20',  name: 'Básico',       product_limit: 20,  monthly_price: 49.90,  annual_price: 508.98, annual_monthly_price: 42.42, discount_pct: 15, color: 'from-emerald-400 to-emerald-600' },
+  { id: 'plan_30',  name: 'Profissional', product_limit: 30,  monthly_price: 79.90,  annual_price: 814.98, annual_monthly_price: 67.92, discount_pct: 15, color: 'from-blue-400 to-blue-600', popular: true },
+  { id: 'plan_50',  name: 'Business',     product_limit: 50,  monthly_price: 119.90, annual_price: 1222.98, annual_monthly_price: 101.92, discount_pct: 15, color: 'from-violet-400 to-violet-600' },
+  { id: 'plan_100', name: 'Enterprise',   product_limit: 100, monthly_price: 199.90, annual_price: 2038.98, annual_monthly_price: 169.92, discount_pct: 15, color: 'from-amber-400 to-orange-500' },
 ];
 
 const DEFAULT_PAYMENT_CONFIG: PaymentConfig = {
