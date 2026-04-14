@@ -1,12 +1,14 @@
-import { Search, ShoppingCart, User, Menu, MapPin, LogIn, Heart, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, MapPin, LogIn, Heart, Bell, Globe } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { categories, products, stores } from '@/data/mock';
 import NotificationBell from './NotificationBell';
 import { supabase } from '@/integrations/supabase/client';
