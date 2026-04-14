@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import SellerLayout from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,49 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2 } from 'lucide-react';
+import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, SellerProfile } from '@/contexts/AuthContext';
 import { useMedia, DURATIONS, PromoDuration, BannerPosition } from '@/contexts/MediaContext';
 import { usePlans } from '@/contexts/PlansContext';
 import { products } from '@/data/mock';
+import { supabase } from '@/integrations/supabase/client';
 
+const BANNER_SIZES: Record<string, { w: number; h: number; label: string }> = {
+  dual_left: { w: 960, h: 540, label: '960×540' },
+  dual_right: { w: 960, h: 540, label: '960×540' },
+  fullwidth: { w: 1920, h: 540, label: '1920×540' },
+  triple_1: { w: 640, h: 480, label: '640×480' },
+  triple_2: { w: 640, h: 480, label: '640×480' },
+  triple_3: { w: 640, h: 480, label: '640×480' },
+};
+
+const DEFAULT_SIZE = { w: 960, h: 540, label: '960×540' };
+
+function resizeImage(file: File, targetW: number, targetH: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d')!;
+      const scale = Math.max(targetW / img.width, targetH / img.height);
+      const sw = targetW / scale;
+      const sh = targetH / scale;
+      const sx = (img.width - sw) / 2;
+      const sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Falha ao converter'))),
+        'image/webp',
+        0.85,
+      );
+    };
+    img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+    img.src = URL.createObjectURL(file);
+  });
+}
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const POSITIONS: { value: BannerPosition; label: string }[] = [
