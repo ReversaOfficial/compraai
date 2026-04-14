@@ -29,6 +29,7 @@ import SellerFinancials from "./pages/seller/SellerFinancials";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerPlans from "./pages/seller/SellerPlans";
 import SellerMedia from "./pages/seller/SellerMedia";
+import SellerDelivery from "./pages/seller/SellerDelivery";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
