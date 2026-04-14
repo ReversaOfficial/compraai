@@ -97,6 +97,7 @@ const App = () => (
 
                       {/* Courier */}
                       <Route path="/freteiro" element={<CourierAvailable />} />
+                      <Route path="/freteiro/cadastro" element={<CourierSignup />} />
                       <Route path="/freteiro/historico" element={<CourierHistory />} />
                       <Route path="/freteiro/ganhos" element={<CourierEarnings />} />
                       <Route path="/freteiro/perfil" element={<CourierProfile />} />
