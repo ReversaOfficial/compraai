@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingBag, DollarSign, Image, Settings, LogOut, Menu, CreditCard, Star, Bell, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Store, Package, ShoppingBag, DollarSign, Image, Settings, LogOut, Menu, CreditCard, Star, Bell, Megaphone, Truck, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,10 @@ const navItems = [
   { to: '/admin/avaliacoes', icon: Star, label: 'Avaliações' },
   { to: '/admin/notificacoes', icon: Bell, label: 'Notificações' },
   { to: '/admin/popup', icon: Megaphone, label: 'Pop-up' },
+  { to: '/admin/tabela-frete', icon: MapPin, label: 'Tabela de Frete' },
+  { to: '/admin/freteiros', icon: Users, label: 'Freteiros' },
+  { to: '/admin/entregas', icon: Truck, label: 'Entregas' },
+  { to: '/admin/financeiro-freteiros', icon: DollarSign, label: 'Fin. Freteiros' },
   { to: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 

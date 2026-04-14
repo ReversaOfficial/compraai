@@ -155,7 +155,7 @@ const CheckoutPage = () => {
     );
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const id = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     setOrderId(id);
     addUserOrder({
@@ -169,6 +169,38 @@ const CheckoutPage = () => {
       deliveryMethod: 'delivery',
       createdAt: new Date().toLocaleDateString('pt-BR'),
     });
+
+    // Create delivery orders for courier (entregaai) deliveries
+    for (const [sid, choice] of Object.entries(shippingChoices)) {
+      if (choice.type === 'entregaai') {
+        const matchedEA = entregaaiZones.find(z =>
+          z.neighborhood?.toLowerCase() === address.neighborhood.toLowerCase() &&
+          z.city?.toLowerCase() === address.city.toLowerCase()
+        ) || entregaaiZones.find(z =>
+          z.city?.toLowerCase() === address.city.toLowerCase()
+        );
+        const feePercent = matchedEA?.platform_fee_percent || 10;
+        const feeAmount = choice.price * feePercent / 100;
+        const storeItems = items.filter(i => i.product.storeId === sid);
+        const storeName = storeItems[0]?.product.storeName || '';
+
+        await supabase.from('delivery_orders').insert({
+          order_id: id,
+          store_id: sid,
+          customer_id: user.id,
+          pickup_address: storeName,
+          delivery_address: `${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}/${address.state}`,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          freight_value: choice.price,
+          platform_fee_percent: feePercent,
+          platform_fee_amount: feeAmount,
+          courier_net_amount: choice.price - feeAmount,
+          status: 'waiting',
+        });
+      }
+    }
+
     clearCart();
     setConfirmed(true);
   };

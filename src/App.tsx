@@ -43,6 +43,10 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPopup from "./pages/admin/AdminPopup";
+import AdminFreightTable from "./pages/admin/AdminFreightTable";
+import AdminCouriers from "./pages/admin/AdminCouriers";
+import AdminDeliveries from "./pages/admin/AdminDeliveries";
+import AdminCourierFinancials from "./pages/admin/AdminCourierFinancials";
 
 import NotFound from "./pages/NotFound";
 import PromoPopup from "./components/marketplace/PromoPopup";
@@ -98,6 +102,10 @@ const App = () => (
                       <Route path="/admin/avaliacoes" element={<AdminReviews />} />
                       <Route path="/admin/notificacoes" element={<AdminNotifications />} />
                       <Route path="/admin/popup" element={<AdminPopup />} />
+                      <Route path="/admin/tabela-frete" element={<AdminFreightTable />} />
+                      <Route path="/admin/freteiros" element={<AdminCouriers />} />
+                      <Route path="/admin/entregas" element={<AdminDeliveries />} />
+                      <Route path="/admin/financeiro-freteiros" element={<AdminCourierFinancials />} />
                       <Route path="/admin/configuracoes" element={<AdminSettings />} />
 
                       <Route path="*" element={<NotFound />} />
