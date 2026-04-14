@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Globe, RotateCcw, Save, Store, Megaphone, LayoutGrid } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Type, Globe, RotateCcw, Save, Store, Megaphone, LayoutGrid, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSiteConfig, SiteTexts, DEFAULT_TEXTS } from '@/contexts/SiteConfigContext';
+import { useSiteConfig, SiteTexts, SiteTheme, DEFAULT_TEXTS, DEFAULT_THEME, FONT_OPTIONS } from '@/contexts/SiteConfigContext';
 
 const Field = ({ label, value, onChange, area = false, hint }: {
   label: string; value: string;
@@ -27,22 +28,83 @@ const Field = ({ label, value, onChange, area = false, hint }: {
   </div>
 );
 
+/* ── HSL ↔ HEX helpers ─────────────────────────────────────────────── */
+function hslToHex(hslStr: string): string {
+  const parts = hslStr.trim().split(/\s+/);
+  const h = parseFloat(parts[0] || '0');
+  const s = parseFloat(parts[1] || '0') / 100;
+  const l = parseFloat(parts[2] || '0') / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function hexToHsl(hex: string): string {
+  let r = 0, g = 0, b = 0;
+  const h6 = hex.replace('#', '');
+  r = parseInt(h6.substring(0, 2), 16) / 255;
+  g = parseInt(h6.substring(2, 4), 16) / 255;
+  b = parseInt(h6.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let hue = 0, sat = 0;
+  const light = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    sat = light > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: hue = ((g - b) / d + (g < b ? 6 : 0)); break;
+      case g: hue = ((b - r) / d + 2); break;
+      case b: hue = ((r - g) / d + 4); break;
+    }
+    hue *= 60;
+  }
+  return `${Math.round(hue)} ${Math.round(sat * 100)}% ${Math.round(light * 100)}%`;
+}
+
+/* ── Color Picker Row ──────────────────────────────────────────────── */
+const ColorField = ({ label, value, onChange, hint }: {
+  label: string; value: string; onChange: (v: string) => void; hint?: string;
+}) => (
+  <div className="flex items-center gap-3">
+    <input
+      type="color"
+      value={hslToHex(value)}
+      onChange={e => onChange(hexToHsl(e.target.value))}
+      className="h-10 w-14 rounded-lg border border-input cursor-pointer shrink-0"
+    />
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium">{label}</p>
+      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+      <code className="text-[10px] text-muted-foreground">{value}</code>
+    </div>
+  </div>
+);
+
 const AdminSettings = () => {
   const { lang, setLang, langs } = useLanguage();
-  const { texts, setTexts } = useSiteConfig();
+  const { texts, setTexts, theme, setTheme } = useSiteConfig();
   const [local, setLocal] = useState<SiteTexts>({ ...texts });
+  const [localTheme, setLocalTheme] = useState<SiteTheme>({ ...theme });
 
   const set = (k: keyof SiteTexts) => (v: string) => setLocal(t => ({ ...t, [k]: v }));
+  const setT = (k: keyof SiteTheme) => (v: string) => setLocalTheme(t => ({ ...t, [k]: v }));
 
   const handleSave = () => {
     setTexts(local);
+    setTheme(localTheme);
     toast.success('Configurações salvas! As alterações já estão no site.');
   };
 
   const handleReset = () => {
     setLocal({ ...DEFAULT_TEXTS });
     setTexts({ ...DEFAULT_TEXTS });
-    toast.success('Textos restaurados para o padrão.');
+    setLocalTheme({ ...DEFAULT_THEME });
+    setTheme({ ...DEFAULT_THEME });
+    toast.success('Tudo restaurado para o padrão.');
   };
 
   const handleLangChange = (v: string) => {
@@ -50,13 +112,15 @@ const AdminSettings = () => {
     toast.success(`Idioma alterado para ${langs.find(l => l.value === v)?.label}`);
   };
 
+  const radiusNum = parseFloat(localTheme.buttonRadius) || 0.75;
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold">Configurações do Site</h1>
-            <p className="text-sm text-muted-foreground">Controle todos os textos e configurações do marketplace</p>
+            <p className="text-sm text-muted-foreground">Controle todos os textos, cores e fontes do marketplace</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-full gap-2" onClick={handleReset}>
@@ -68,14 +132,152 @@ const AdminSettings = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="geral">
+        <Tabs defaultValue="aparencia">
           <TabsList className="mb-6 flex-wrap h-auto">
+            <TabsTrigger value="aparencia" className="gap-2"><Palette className="h-4 w-4" /> Aparência</TabsTrigger>
             <TabsTrigger value="geral" className="gap-2"><Type className="h-4 w-4" /> Geral</TabsTrigger>
             <TabsTrigger value="hero" className="gap-2"><Megaphone className="h-4 w-4" /> Hero</TabsTrigger>
             <TabsTrigger value="secoes" className="gap-2"><LayoutGrid className="h-4 w-4" /> Seções</TabsTrigger>
             <TabsTrigger value="lojista" className="gap-2"><Store className="h-4 w-4" /> CTA Lojista</TabsTrigger>
             <TabsTrigger value="idioma" className="gap-2"><Globe className="h-4 w-4" /> Idioma</TabsTrigger>
           </TabsList>
+
+          {/* ── APARÊNCIA ── */}
+          <TabsContent value="aparencia">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Cores */}
+              <Card className="shadow-card">
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Cores do Site</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <ColorField label="Cor Primária" value={localTheme.primaryColor} onChange={setT('primaryColor')} hint="Botões, links, header, sidebar" />
+                  <ColorField label="Cor de Destaque" value={localTheme.accentColor} onChange={setT('accentColor')} hint="Tags, promoções, CTAs secundários" />
+                  <ColorField label="Fundo do Site" value={localTheme.backgroundColor} onChange={setT('backgroundColor')} hint="Cor de fundo geral" />
+                  <ColorField label="Cor dos Textos" value={localTheme.foregroundColor} onChange={setT('foregroundColor')} hint="Títulos e textos principais" />
+                  <ColorField label="Cor dos Cards" value={localTheme.cardColor} onChange={setT('cardColor')} hint="Cards de produto, popups" />
+                  <ColorField label="Cor de Muted" value={localTheme.mutedColor} onChange={setT('mutedColor')} hint="Fundos secundários, inputs" />
+                  <ColorField label="Cor das Bordas" value={localTheme.borderColor} onChange={setT('borderColor')} hint="Bordas, separadores" />
+                </CardContent>
+              </Card>
+
+              {/* Fontes e Raio */}
+              <div className="space-y-6">
+                <Card className="shadow-card">
+                  <CardHeader><CardTitle className="text-base">Tipografia</CardTitle></CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fonte dos Títulos</Label>
+                      <Select value={localTheme.fontHeading} onValueChange={setT('fontHeading')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {FONT_OPTIONS.map(f => (
+                            <SelectItem key={f} value={f}><span style={{ fontFamily: `'${f}', sans-serif` }}>{f}</span></SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-3xl font-bold" style={{ fontFamily: `'${localTheme.fontHeading}', sans-serif` }}>
+                        Compra Aí
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fonte do Corpo</Label>
+                      <Select value={localTheme.fontBody} onValueChange={setT('fontBody')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {FONT_OPTIONS.map(f => (
+                            <SelectItem key={f} value={f}><span style={{ fontFamily: `'${f}', sans-serif` }}>{f}</span></SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm" style={{ fontFamily: `'${localTheme.fontBody}', sans-serif` }}>
+                        Produtos incríveis de lojas da sua cidade. Entrega no mesmo dia, retirada na loja.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-card">
+                  <CardHeader><CardTitle className="text-base">Arredondamento dos Botões</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Slider
+                      value={[radiusNum]}
+                      onValueChange={([v]) => setT('buttonRadius')(`${v}rem`)}
+                      min={0} max={2} step={0.125}
+                    />
+                    <div className="flex items-center gap-3">
+                      <code className="text-xs text-muted-foreground">{localTheme.buttonRadius}</code>
+                      <div className="flex gap-2">
+                        <button
+                          className="px-4 py-2 text-sm font-medium text-white"
+                          style={{
+                            background: `hsl(${localTheme.primaryColor})`,
+                            borderRadius: localTheme.buttonRadius,
+                          }}
+                        >
+                          Botão Primário
+                        </button>
+                        <button
+                          className="px-4 py-2 text-sm font-medium text-white"
+                          style={{
+                            background: `hsl(${localTheme.accentColor})`,
+                            borderRadius: localTheme.buttonRadius,
+                          }}
+                        >
+                          Botão Destaque
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Live Preview */}
+                <Card className="shadow-card">
+                  <CardHeader><CardTitle className="text-base">Pré-visualização</CardTitle></CardHeader>
+                  <CardContent>
+                    <div
+                      className="rounded-xl overflow-hidden border"
+                      style={{ background: `hsl(${localTheme.backgroundColor})` }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-2" style={{ background: `hsl(${localTheme.primaryColor})` }}>
+                        <div className="h-6 w-6 rounded-md bg-white/20" />
+                        <span className="text-sm font-bold text-white" style={{ fontFamily: `'${localTheme.fontHeading}', sans-serif` }}>
+                          {local.site_name}
+                        </span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <h3 className="text-lg font-bold" style={{ color: `hsl(${localTheme.foregroundColor})`, fontFamily: `'${localTheme.fontHeading}', sans-serif` }}>
+                          Título de Exemplo
+                        </h3>
+                        <p className="text-sm" style={{ color: `hsl(${localTheme.foregroundColor} / 0.7)`, fontFamily: `'${localTheme.fontBody}', sans-serif` }}>
+                          Texto do corpo do site com a fonte selecionada.
+                        </p>
+                        <div className="flex gap-2">
+                          <span
+                            className="px-3 py-1.5 text-xs font-bold text-white"
+                            style={{ background: `hsl(${localTheme.primaryColor})`, borderRadius: localTheme.buttonRadius }}
+                          >
+                            Comprar
+                          </span>
+                          <span
+                            className="px-3 py-1.5 text-xs font-bold text-white"
+                            style={{ background: `hsl(${localTheme.accentColor})`, borderRadius: localTheme.buttonRadius }}
+                          >
+                            Promoção
+                          </span>
+                        </div>
+                        <div
+                          className="p-3 rounded-lg border"
+                          style={{ background: `hsl(${localTheme.cardColor})`, borderColor: `hsl(${localTheme.borderColor})` }}
+                        >
+                          <p className="text-xs" style={{ color: `hsl(${localTheme.foregroundColor})` }}>Card de produto</p>
+                          <p className="text-lg font-bold" style={{ color: `hsl(${localTheme.primaryColor})` }}>R$ 49,90</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
           {/* ── GERAL ── */}
           <TabsContent value="geral">
