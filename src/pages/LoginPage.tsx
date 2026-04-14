@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { LogIn, Mail, Lock, ShoppingBag, Store, ShieldCheck, User } from 'lucide-react';
+import { LogIn, Mail, Lock, ShoppingBag, Store, ShieldCheck, User, Truck } from 'lucide-react';
+
+type Tab = 'customer' | 'seller' | 'admin' | 'courier';
 
 const LoginPage = () => {
-  const [tab, setTab] = useState<'customer' | 'seller' | 'admin'>('customer');
+  const [tab, setTab] = useState<Tab>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [adminLogin, setAdminLogin] = useState('');
@@ -32,6 +34,23 @@ const LoginPage = () => {
     navigate(tab === 'customer' ? '/conta' : '/lojista');
   };
 
+  const handleCourier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) { toast.error('E-mail ou senha inválidos'); return; }
+    // Check if user is a registered courier
+    const { data: courier } = await supabase.from('couriers').select('id').eq('user_id', data.user.id).maybeSingle();
+    if (!courier) {
+      toast.error('Você não está cadastrado como freteiro. Crie sua conta primeiro.');
+      await supabase.auth.signOut();
+      return;
+    }
+    toast.success('Bem-vindo, freteiro!');
+    navigate('/freteiro');
+  };
+
   const handleAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,7 +62,28 @@ const LoginPage = () => {
   };
 
   const tabStyle = (active: boolean, base: string) =>
-    `flex items-center gap-1.5 flex-1 justify-center rounded-md py-2 text-sm font-medium transition-all ${active ? base : 'text-muted-foreground hover:text-foreground'}`;
+    `flex items-center gap-1 flex-1 justify-center rounded-md py-2 text-xs font-medium transition-all ${active ? base : 'text-muted-foreground hover:text-foreground'}`;
+
+  const tabs: { key: Tab; label: string; icon: any }[] = [
+    { key: 'customer', label: 'Cliente', icon: ShoppingBag },
+    { key: 'seller', label: 'Lojista', icon: Store },
+    { key: 'courier', label: 'Freteiro', icon: Truck },
+    { key: 'admin', label: 'Admin', icon: ShieldCheck },
+  ];
+
+  const showEmailForm = tab === 'customer' || tab === 'seller' || tab === 'courier';
+
+  const hints: Record<string, { bg: string; text: string }> = {
+    customer: { bg: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800', text: '🛍️ Acesse sua conta para acompanhar pedidos e gerenciar seus dados.' },
+    seller: { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800', text: '🏪 Acesse o painel da sua loja para gerenciar produtos e pedidos.' },
+    courier: { bg: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800', text: '🚚 Acesse o painel de entregas para ver corridas disponíveis e seus ganhos.' },
+  };
+
+  const signupLinks: Record<string, { to: string; label: string }> = {
+    customer: { to: '/cadastro', label: 'Criar conta' },
+    seller: { to: '/cadastro-lojista', label: 'Cadastrar loja' },
+    courier: { to: '/freteiro/cadastro', label: 'Quer ser freteiro? Crie sua conta' },
+  };
 
   return (
     <MarketplaceLayout>
@@ -60,33 +100,23 @@ const LoginPage = () => {
           </CardHeader>
 
           <CardContent className="pt-4">
-            {/* Custom Tab Bar */}
+            {/* Tab Bar */}
             <div className="flex bg-muted rounded-lg p-1 mb-6 gap-1">
-              <button onClick={() => setTab('customer')}
-                className={tabStyle(tab === 'customer', 'bg-white shadow-sm text-foreground dark:bg-card')}>
-                <ShoppingBag className="h-3.5 w-3.5" /> Cliente
-              </button>
-              <button onClick={() => setTab('seller')}
-                className={tabStyle(tab === 'seller', 'bg-white shadow-sm text-foreground dark:bg-card')}>
-                <Store className="h-3.5 w-3.5" /> Lojista
-              </button>
-              <button onClick={() => setTab('admin')}
-                className={tabStyle(tab === 'admin', 'bg-white shadow-sm text-foreground dark:bg-card')}>
-                <ShieldCheck className="h-3.5 w-3.5" /> Admin
-              </button>
+              {tabs.map(t => (
+                <button key={t.key} onClick={() => setTab(t.key)}
+                  className={tabStyle(tab === t.key, 'bg-white shadow-sm text-foreground dark:bg-card')}>
+                  <t.icon className="h-3.5 w-3.5" /> {t.label}
+                </button>
+              ))}
             </div>
 
-            {/* Client / Seller */}
-            {(tab === 'customer' || tab === 'seller') && (
+            {/* Email-based forms */}
+            {showEmailForm && (
               <>
-                <div className={`rounded-lg p-3 mb-5 text-sm border ${tab === 'customer'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'}`}>
-                  {tab === 'customer'
-                    ? '🛍️ Acesse sua conta para acompanhar pedidos e gerenciar seus dados.'
-                    : '🏪 Acesse o painel da sua loja para gerenciar produtos e pedidos.'}
+                <div className={`rounded-lg p-3 mb-5 text-sm border ${hints[tab].bg}`}>
+                  {hints[tab].text}
                 </div>
-                <form onSubmit={handleCustomerSeller} className="space-y-4">
+                <form onSubmit={tab === 'courier' ? handleCourier : handleCustomerSeller} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">E-mail</Label>
                     <div className="relative">
@@ -109,8 +139,8 @@ const LoginPage = () => {
                 </form>
                 <p className="mt-5 text-center text-sm text-muted-foreground">
                   Não tem conta?{' '}
-                  <Link to={tab === 'customer' ? '/cadastro' : '/cadastro-lojista'} className="text-primary font-medium hover:underline">
-                    {tab === 'customer' ? 'Criar conta' : 'Cadastrar loja'}
+                  <Link to={signupLinks[tab].to} className="text-primary font-medium hover:underline">
+                    {signupLinks[tab].label}
                   </Link>
                 </p>
               </>
