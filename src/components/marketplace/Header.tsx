@@ -16,11 +16,14 @@ import { supabase } from '@/integrations/supabase/client';
 const Header = () => {
   const { itemCount } = useCart();
   const { user } = useAuth();
+  const { lang, setLang, langs } = useLanguage();
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState<{ type: string; label: string; link: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
   const ref = useRef<HTMLFormElement>(null);
+
+  const langFlags: Record<string, string> = { 'pt-BR': '🇧🇷', en: '🇺🇸', de: '🇩🇪', fr: '🇫🇷' };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
