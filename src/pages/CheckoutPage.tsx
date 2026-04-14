@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CreditCard, QrCode, MapPin, Truck, CheckCircle2, LogIn } from 'lucide-react';
+import { CreditCard, QrCode, MapPin, Truck, CheckCircle2, LogIn, Package } from 'lucide-react';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth, CustomerProfile } from '@/contexts/AuthContext';
@@ -9,8 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { supabase } from '@/integrations/supabase/client';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+interface ShippingOption {
+  type: 'pickup' | 'store_delivery' | 'entregaai';
+  label: string;
+  description: string;
+  price: number;
+  storeId: string;
+  storeName: string;
+}
 
 const CheckoutPage = () => {
   const { items, total, clearCart } = useCart();
@@ -18,46 +28,115 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [payment, setPayment] = useState('pix');
-  const [delivery, setDelivery] = useState('delivery');
   const [confirmed, setConfirmed] = useState(false);
   const [orderId, setOrderId] = useState('');
 
+  // Shipping per store
+  const [shippingChoices, setShippingChoices] = useState<Record<string, ShippingOption>>({});
+  const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
+  const [entregaaiZones, setEntregaaiZones] = useState<any[]>([]);
+
   const profile = (user && user.role === 'customer') ? user as CustomerProfile : null;
 
-  // Pré-preencher com dados do perfil
   const [address, setAddress] = useState({
-    full_name: '',
-    phone: '',
-    street: '',
-    number: '',
-    complement: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-    zip: '',
+    full_name: '', phone: '', street: '', number: '', complement: '',
+    neighborhood: '', city: '', state: '', zip: '',
   });
 
   useEffect(() => {
     if (profile) {
       setAddress({
-        full_name: profile.full_name || '',
-        phone: profile.phone || '',
-        street: profile.address_street || '',
-        number: profile.address_number || '',
-        complement: profile.address_complement || '',
-        neighborhood: profile.address_neighborhood || '',
-        city: profile.address_city || '',
-        state: profile.address_state || '',
-        zip: profile.address_zip || '',
+        full_name: profile.full_name || '', phone: profile.phone || '',
+        street: profile.address_street || '', number: profile.address_number || '',
+        complement: profile.address_complement || '', neighborhood: profile.address_neighborhood || '',
+        city: profile.address_city || '', state: profile.address_state || '', zip: profile.address_zip || '',
       });
     }
   }, [profile]);
+
+  // Fetch delivery zones for all stores in cart
+  const storeIds = useMemo(() => [...new Set(items.map(i => i.product.storeId))], [items]);
+
+  useEffect(() => {
+    const fetchZones = async () => {
+      if (storeIds.length === 0) return;
+      const { data: dz } = await supabase.from('delivery_zones').select('*').in('store_id', storeIds).eq('is_active', true);
+      setDeliveryZones(dz || []);
+      const { data: ea } = await supabase.from('entregaai_settings').select('*').eq('is_active', true);
+      setEntregaaiZones(ea || []);
+    };
+    fetchZones();
+  }, [storeIds]);
+
+  // Calculate shipping options per store
+  const storeShippingOptions = useMemo(() => {
+    const result: Record<string, ShippingOption[]> = {};
+    const grouped = items.reduce<Record<string, typeof items>>((acc, item) => {
+      (acc[item.product.storeId] = acc[item.product.storeId] || []).push(item);
+      return acc;
+    }, {});
+
+    for (const [sid, storeItems] of Object.entries(grouped)) {
+      const storeName = storeItems[0].product.storeName;
+      const options: ShippingOption[] = [];
+
+      // Pickup always available
+      options.push({ type: 'pickup', label: 'Retirada na loja', description: 'Retire na loja', price: 0, storeId: sid, storeName });
+
+      // Store delivery - find matching zone
+      const storeZones = deliveryZones.filter(z => z.store_id === sid);
+      const matchedZone = storeZones.find(z =>
+        z.neighborhood.toLowerCase() === address.neighborhood.toLowerCase() &&
+        z.city.toLowerCase() === address.city.toLowerCase()
+      ) || storeZones.find(z =>
+        z.city.toLowerCase() === address.city.toLowerCase() && !z.neighborhood
+      ) || storeZones.find(z =>
+        z.city.toLowerCase() === address.city.toLowerCase()
+      );
+
+      if (matchedZone) {
+        options.push({ type: 'store_delivery', label: 'Entrega pela loja', description: `Frete: ${fmt(matchedZone.price)}`, price: matchedZone.price, storeId: sid, storeName });
+      }
+
+      // EntregaAI
+      const matchedEA = entregaaiZones.find(z =>
+        z.neighborhood.toLowerCase() === address.neighborhood.toLowerCase() &&
+        z.city.toLowerCase() === address.city.toLowerCase()
+      ) || entregaaiZones.find(z =>
+        z.city.toLowerCase() === address.city.toLowerCase() && !z.neighborhood
+      ) || entregaaiZones.find(z =>
+        z.city.toLowerCase() === address.city.toLowerCase()
+      );
+
+      if (matchedEA) {
+        options.push({ type: 'entregaai', label: 'EntregaAí', description: `Entrega pela plataforma · ${fmt(matchedEA.base_price)}`, price: matchedEA.base_price, storeId: sid, storeName });
+      }
+
+      result[sid] = options;
+    }
+    return result;
+  }, [items, deliveryZones, entregaaiZones, address.neighborhood, address.city]);
+
+  // Auto-select first option per store
+  useEffect(() => {
+    const newChoices: Record<string, ShippingOption> = {};
+    for (const [sid, opts] of Object.entries(storeShippingOptions)) {
+      if (!shippingChoices[sid] || !opts.find(o => o.type === shippingChoices[sid].type)) {
+        newChoices[sid] = opts[0];
+      } else {
+        newChoices[sid] = opts.find(o => o.type === shippingChoices[sid].type) || opts[0];
+      }
+    }
+    setShippingChoices(newChoices);
+  }, [storeShippingOptions]);
+
+  const shippingTotal = Object.values(shippingChoices).reduce((sum, c) => sum + c.price, 0);
+  const grandTotal = total + shippingTotal;
 
   const setAddr = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setAddress(a => ({ ...a, [k]: e.target.value }));
 
   if (items.length === 0 && !confirmed) { navigate('/carrinho'); return null; }
 
-  // Se não estiver logado, pedir login
   if (!user || !isCustomer) {
     return (
       <MarketplaceLayout>
@@ -68,12 +147,8 @@ const CheckoutPage = () => {
           <h1 className="text-2xl font-bold mb-2">Entre na sua conta</h1>
           <p className="text-muted-foreground mb-6">Para finalizar sua compra, faça login ou crie uma conta.</p>
           <div className="flex gap-3 justify-center">
-            <Button className="rounded-full" asChild>
-              <Link to="/login">Entrar</Link>
-            </Button>
-            <Button variant="outline" className="rounded-full" asChild>
-              <Link to="/cadastro">Criar Conta</Link>
-            </Button>
+            <Button className="rounded-full" asChild><Link to="/login">Entrar</Link></Button>
+            <Button variant="outline" className="rounded-full" asChild><Link to="/cadastro">Criar Conta</Link></Button>
           </div>
         </div>
       </MarketplaceLayout>
@@ -83,25 +158,17 @@ const CheckoutPage = () => {
   const handleConfirm = () => {
     const id = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     setOrderId(id);
-
-    // Salvar pedido vinculado ao usuário
     addUserOrder({
-      id,
-      userId: user.id,
+      id, userId: user.id,
       items: items.map(({ product, quantity }) => ({
-        name: product.name,
-        image: product.image,
-        storeName: product.storeName,
-        price: product.promoPrice || product.price,
-        quantity,
+        name: product.name, image: product.image, storeName: product.storeName,
+        price: product.promoPrice || product.price, quantity,
       })),
-      total,
-      status: 'pending',
+      total: grandTotal, status: 'pending',
       paymentMethod: payment as 'pix' | 'credit_card',
-      deliveryMethod: delivery as 'delivery' | 'pickup',
+      deliveryMethod: 'delivery',
       createdAt: new Date().toLocaleDateString('pt-BR'),
     });
-
     clearCart();
     setConfirmed(true);
   };
@@ -124,7 +191,6 @@ const CheckoutPage = () => {
   );
 
   const steps = ['Endereço', 'Entrega', 'Pagamento', 'Revisão'];
-
   const hasAddress = address.street && address.number && address.neighborhood && address.city && address.zip;
 
   return (
@@ -146,13 +212,11 @@ const CheckoutPage = () => {
         {step === 0 && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-lg font-semibold flex items-center gap-2"><MapPin className="h-5 w-5" /> Endereço de Entrega</h2>
-
             {hasAddress && (
               <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-3 text-sm text-emerald-700 dark:text-emerald-300">
-                ✅ Endereço preenchido automaticamente do seu cadastro. Você pode editar se necessário.
+                ✅ Endereço preenchido automaticamente do seu cadastro.
               </div>
             )}
-
             <div className="grid gap-4 sm:grid-cols-2">
               <div><Label>Nome completo</Label><Input value={address.full_name} onChange={setAddr('full_name')} placeholder="Seu nome" /></div>
               <div><Label>Telefone</Label><Input value={address.phone} onChange={setAddr('phone')} placeholder="(00) 00000-0000" /></div>
@@ -176,19 +240,47 @@ const CheckoutPage = () => {
 
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
-            <h2 className="text-lg font-semibold flex items-center gap-2"><Truck className="h-5 w-5" /> Método de Recebimento</h2>
-            <RadioGroup value={delivery} onValueChange={setDelivery} className="space-y-3">
-              <label className="flex items-center gap-3 rounded-xl border p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
-                <RadioGroupItem value="delivery" />
-                <Truck className="h-5 w-5 text-primary" />
-                <div><p className="font-medium text-sm">Entrega em casa</p><p className="text-xs text-muted-foreground">Receba no endereço informado</p></div>
-              </label>
-              <label className="flex items-center gap-3 rounded-xl border p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
-                <RadioGroupItem value="pickup" />
-                <MapPin className="h-5 w-5 text-primary" />
-                <div><p className="font-medium text-sm">Retirada na loja</p><p className="text-xs text-muted-foreground">Retire diretamente em cada loja</p></div>
-              </label>
-            </RadioGroup>
+            <h2 className="text-lg font-semibold flex items-center gap-2"><Truck className="h-5 w-5" /> Método de Entrega por Loja</h2>
+            <p className="text-sm text-muted-foreground">Escolha como deseja receber os produtos de cada loja.</p>
+
+            {Object.entries(storeShippingOptions).map(([sid, opts]) => (
+              <div key={sid} className="rounded-xl border p-4 space-y-3">
+                <p className="text-sm font-semibold">{opts[0]?.storeName}</p>
+                <div className="text-xs text-muted-foreground mb-2">
+                  {items.filter(i => i.product.storeId === sid).map(i => i.product.name).join(', ')}
+                </div>
+                <RadioGroup
+                  value={shippingChoices[sid]?.type || 'pickup'}
+                  onValueChange={val => {
+                    const opt = opts.find(o => o.type === val);
+                    if (opt) setShippingChoices(prev => ({ ...prev, [sid]: opt }));
+                  }}
+                  className="space-y-2"
+                >
+                  {opts.map(opt => (
+                    <label key={opt.type} className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-secondary/50 transition-colors">
+                      <RadioGroupItem value={opt.type} />
+                      {opt.type === 'pickup' && <Package className="h-4 w-4 text-primary" />}
+                      {opt.type === 'store_delivery' && <Truck className="h-4 w-4 text-primary" />}
+                      {opt.type === 'entregaai' && <Truck className="h-4 w-4 text-accent" />}
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.description}</p>
+                      </div>
+                      <p className="text-sm font-bold">{opt.price > 0 ? fmt(opt.price) : 'Grátis'}</p>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+            ))}
+
+            {shippingTotal > 0 && (
+              <div className="rounded-lg bg-secondary/50 p-3 flex justify-between text-sm font-medium">
+                <span>Total do frete</span>
+                <span className="text-primary font-bold">{fmt(shippingTotal)}</span>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button variant="outline" className="rounded-full" onClick={() => setStep(0)}>Voltar</Button>
               <Button className="rounded-full" onClick={() => setStep(2)}>Continuar</Button>
@@ -230,7 +322,6 @@ const CheckoutPage = () => {
           <div className="space-y-6 animate-fade-in">
             <h2 className="text-lg font-semibold">Revisão do Pedido</h2>
 
-            {/* Endereço resumido */}
             <div className="rounded-xl border p-4">
               <p className="text-sm font-medium mb-1 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Entregar para:</p>
               <p className="text-sm text-muted-foreground">
@@ -241,21 +332,27 @@ const CheckoutPage = () => {
             </div>
 
             <div className="rounded-xl border divide-y">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex items-center gap-4 p-4">
-                  <img src={product.image} alt={product.name} className="h-12 w-12 rounded-lg object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.storeName} · Qtd: {quantity}</p>
+              {items.map(({ product, quantity }) => {
+                const choice = shippingChoices[product.storeId];
+                return (
+                  <div key={product.id} className="flex items-center gap-4 p-4">
+                    <img src={product.image} alt={product.name} className="h-12 w-12 rounded-lg object-cover" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">{product.storeName} · Qtd: {quantity}</p>
+                      {choice && <p className="text-xs text-primary">{choice.label}{choice.price > 0 ? ` · ${fmt(choice.price)}` : ''}</p>}
+                    </div>
+                    <p className="text-sm font-bold">{fmt((product.promoPrice || product.price) * quantity)}</p>
                   </div>
-                  <p className="text-sm font-bold">{fmt((product.promoPrice || product.price) * quantity)}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             <div className="rounded-xl bg-secondary/50 p-4 space-y-2 text-sm">
-              <div className="flex justify-between"><span>Método</span><span className="font-medium">{delivery === 'delivery' ? 'Entrega' : 'Retirada'}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span className="font-medium">{fmt(total)}</span></div>
+              <div className="flex justify-between"><span>Frete</span><span className="font-medium">{shippingTotal > 0 ? fmt(shippingTotal) : 'Grátis'}</span></div>
               <div className="flex justify-between"><span>Pagamento</span><span className="font-medium">{payment === 'pix' ? 'Pix' : 'Cartão de Crédito'}</span></div>
-              <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-primary">{fmt(total)}</span></div>
+              <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-primary">{fmt(grandTotal)}</span></div>
             </div>
             <div className="flex gap-3">
               <Button variant="outline" className="rounded-full" onClick={() => setStep(2)}>Voltar</Button>
