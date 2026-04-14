@@ -127,6 +127,21 @@ const Header = () => {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-base">
+                <span>{langFlags[lang] || '🌐'}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[140px]">
+              {langs.map(l => (
+                <DropdownMenuItem key={l.value} onClick={() => setLang(l.value)}
+                  className={lang === l.value ? 'bg-primary/10 font-semibold' : ''}>
+                  <span className="mr-2">{langFlags[l.value]}</span> {l.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon" className="md:hidden h-10 w-10" onClick={() => navigate('/busca')}>
             <Search className="h-5 w-5" />
           </Button>
