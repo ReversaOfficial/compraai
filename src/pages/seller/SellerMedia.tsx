@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import SellerLayout from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,49 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2 } from 'lucide-react';
+import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, SellerProfile } from '@/contexts/AuthContext';
 import { useMedia, DURATIONS, PromoDuration, BannerPosition } from '@/contexts/MediaContext';
 import { usePlans } from '@/contexts/PlansContext';
 import { products } from '@/data/mock';
+import { supabase } from '@/integrations/supabase/client';
 
+const BANNER_SIZES: Record<string, { w: number; h: number; label: string }> = {
+  dual_left: { w: 960, h: 540, label: '960×540' },
+  dual_right: { w: 960, h: 540, label: '960×540' },
+  fullwidth: { w: 1920, h: 540, label: '1920×540' },
+  triple_1: { w: 640, h: 480, label: '640×480' },
+  triple_2: { w: 640, h: 480, label: '640×480' },
+  triple_3: { w: 640, h: 480, label: '640×480' },
+};
+
+const DEFAULT_SIZE = { w: 960, h: 540, label: '960×540' };
+
+function resizeImage(file: File, targetW: number, targetH: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d')!;
+      const scale = Math.max(targetW / img.width, targetH / img.height);
+      const sw = targetW / scale;
+      const sh = targetH / scale;
+      const sx = (img.width - sw) / 2;
+      const sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Falha ao converter'))),
+        'image/webp',
+        0.85,
+      );
+    };
+    img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+    img.src = URL.createObjectURL(file);
+  });
+}
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const POSITIONS: { value: BannerPosition; label: string }[] = [
@@ -104,6 +140,8 @@ const BannerBuy = () => {
   const { user } = useAuth();
   const { pricing, buyBanner, getSellerBanners, confirmBannerPayment } = useMedia();
   const seller = user as SellerProfile;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [step, setStep] = useState<'form' | 'pay' | 'done'>('form');
   const [form, setForm] = useState({ position: '' as BannerPosition | '', duration: 7 as PromoDuration, image: '', title: '', tag: '', cta: 'Ver Produtos', link: '/' });
@@ -111,6 +149,29 @@ const BannerBuy = () => {
 
   const price = form.duration ? pricing.banner_prices[form.duration] : 0;
   const sellerBanners = seller ? getSellerBanners(seller.id) : [];
+  const currentSize = form.position ? (BANNER_SIZES[form.position] || DEFAULT_SIZE) : DEFAULT_SIZE;
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const resized = await resizeImage(file, currentSize.w, currentSize.h);
+      const fileName = `banner_${Date.now()}.webp`;
+      const { error } = await supabase.storage.from('banners').upload(fileName, resized, {
+        contentType: 'image/webp', upsert: true,
+      });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('banners').getPublicUrl(fileName);
+      setForm(f => ({ ...f, image: urlData.publicUrl }));
+      toast.success(`Imagem enviada (${currentSize.label})`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
 
   const handlePaid = (method: 'pix' | 'credit_card') => {
     if (!seller || !form.position) return;
@@ -120,18 +181,18 @@ const BannerBuy = () => {
       image: form.image, title: form.title, tag: form.tag, cta: form.cta, link: form.link,
       duration_days: form.duration,
       amount_paid: price, payment_method: method,
-      payment_status: method === 'credit_card' ? 'confirmed' : 'pending',
+      payment_status: 'confirmed',
     });
     setLastId(rec.id);
-    if (method === 'credit_card') confirmBannerPayment(rec.id);
+    confirmBannerPayment(rec.id);
     setStep('done');
   };
 
   if (step === 'done') return (
     <div className="text-center space-y-4 py-4">
       <CheckCircle className="h-14 w-14 mx-auto text-emerald-500" />
-      <h3 className="text-lg font-bold">Banner contratado!</h3>
-      <p className="text-sm text-muted-foreground">Seu banner será exibido assim que o pagamento for confirmado.</p>
+      <h3 className="text-lg font-bold">Banner contratado e ativado!</h3>
+      <p className="text-sm text-muted-foreground">Seu banner já está visível na homepage.</p>
       <Button onClick={() => setStep('form')}>Contratar outro</Button>
     </div>
   );
@@ -144,18 +205,17 @@ const BannerBuy = () => {
     <div className="space-y-6">
       <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 text-sm">
         <p className="font-semibold text-primary mb-1">📍 Como funciona</p>
-        <p className="text-muted-foreground">Escolha um espaço na homepage, defina o período e pronto! Seu banner aparece para todos os clientes da plataforma.</p>
+        <p className="text-muted-foreground">Escolha um espaço, envie sua imagem, pague e pronto! Ativação automática após pagamento.</p>
       </div>
 
-      {/* Pricing reference */}
       <div>
         <p className="text-sm font-semibold mb-2">Tabela de preços</p>
         <div className="grid grid-cols-4 gap-2">
           {DURATIONS.map(d => (
             <button key={d} onClick={() => setForm(f => ({ ...f, duration: d }))}
-              className={`rounded-lg border-2 p-2 text-center text-xs transition-all ${form.duration === d ? 'border-primary bg-primary text-white' : 'border-border hover:border-primary/40'}`}>
+              className={`rounded-lg border-2 p-2 text-center text-xs transition-all ${form.duration === d ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40'}`}>
               <p className="font-bold">{d}d</p>
-              <p className={form.duration === d ? 'text-white/80' : 'text-muted-foreground'}>{fmt(pricing.banner_prices[d])}</p>
+              <p className={form.duration === d ? 'text-primary-foreground/80' : 'text-muted-foreground'}>{fmt(pricing.banner_prices[d])}</p>
             </button>
           ))}
         </div>
@@ -170,8 +230,17 @@ const BannerBuy = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>URL da Imagem do Banner</Label>
-          <Input value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+          <Label>Imagem do Banner ({currentSize.label})</Label>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="rounded-full shrink-0" disabled={uploading}
+              onClick={() => fileRef.current?.click()}>
+              {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+              {uploading ? 'Enviando...' : 'Enviar imagem'}
+            </Button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+          </div>
+          {form.image && <img src={form.image} alt="Preview" className="w-full rounded-lg border aspect-video object-cover mt-2" />}
+          <p className="text-xs text-muted-foreground">Redimensionada automaticamente para {currentSize.label}px</p>
         </div>
         <div className="space-y-2">
           <Label>Título</Label>
@@ -200,7 +269,6 @@ const BannerBuy = () => {
         </Button>
       </div>
 
-      {/* Active banners */}
       {sellerBanners.length > 0 && (
         <div>
           <p className="text-sm font-semibold mb-3">Seus banners</p>
@@ -249,9 +317,9 @@ const ProductHighlightBuy = () => {
       product_id: product.id, product_name: product.name, product_image: product.image,
       duration_days: duration, amount_paid: price,
       payment_method: method,
-      payment_status: method === 'credit_card' ? 'confirmed' : 'pending',
+      payment_status: 'confirmed',
     });
-    if (method === 'credit_card') confirmHighlightPayment(rec.id);
+    confirmHighlightPayment(rec.id);
     setStep('done');
   };
 
