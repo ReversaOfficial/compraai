@@ -184,6 +184,195 @@ export type Database = {
           },
         ]
       }
+      courier_payouts: {
+        Row: {
+          courier_id: string
+          created_at: string
+          gross_amount: number
+          id: string
+          net_amount: number
+          paid_at: string | null
+          payout_date: string
+          platform_fee_total: number
+          status: string
+          total_deliveries: number
+          updated_at: string
+        }
+        Insert: {
+          courier_id: string
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          paid_at?: string | null
+          payout_date?: string
+          platform_fee_total?: number
+          status?: string
+          total_deliveries?: number
+          updated_at?: string
+        }
+        Update: {
+          courier_id?: string
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          paid_at?: string | null
+          payout_date?: string
+          platform_fee_total?: number
+          status?: string
+          total_deliveries?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_payouts_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couriers: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          neighborhoods: string[]
+          operational_status: string
+          phone: string
+          updated_at: string
+          user_id: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          neighborhoods?: string[]
+          operational_status?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_type?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          neighborhoods?: string[]
+          operational_status?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
+      delivery_orders: {
+        Row: {
+          accepted_at: string | null
+          cancelled_at: string | null
+          city: string
+          courier_id: string | null
+          courier_net_amount: number
+          created_at: string
+          customer_id: string
+          delivered_at: string | null
+          delivery_address: string
+          freight_value: number
+          id: string
+          in_route_at: string | null
+          neighborhood: string
+          order_id: string
+          paid_at: string | null
+          picked_up_at: string | null
+          pickup_address: string
+          platform_fee_amount: number
+          platform_fee_percent: number
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          city?: string
+          courier_id?: string | null
+          courier_net_amount?: number
+          created_at?: string
+          customer_id: string
+          delivered_at?: string | null
+          delivery_address?: string
+          freight_value?: number
+          id?: string
+          in_route_at?: string | null
+          neighborhood?: string
+          order_id: string
+          paid_at?: string | null
+          picked_up_at?: string | null
+          pickup_address?: string
+          platform_fee_amount?: number
+          platform_fee_percent?: number
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          city?: string
+          courier_id?: string | null
+          courier_net_amount?: number
+          created_at?: string
+          customer_id?: string
+          delivered_at?: string | null
+          delivery_address?: string
+          freight_value?: number
+          id?: string
+          in_route_at?: string | null
+          neighborhood?: string
+          order_id?: string
+          paid_at?: string | null
+          picked_up_at?: string | null
+          pickup_address?: string
+          platform_fee_amount?: number
+          platform_fee_percent?: number
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           city: string
@@ -236,6 +425,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           neighborhood: string
+          platform_fee_percent: number
           state: string
           updated_at: string
         }
@@ -246,6 +436,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           neighborhood?: string
+          platform_fee_percent?: number
           state?: string
           updated_at?: string
         }
@@ -256,6 +447,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           neighborhood?: string
+          platform_fee_percent?: number
           state?: string
           updated_at?: string
         }
