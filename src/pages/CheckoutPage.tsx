@@ -13,6 +13,37 @@ import { supabase } from '@/integrations/supabase/client';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+const notifyCouriersWhatsApp = async (neighborhood: string, city: string, freightValue: number, courierNet: number) => {
+  try {
+    // Get active couriers that serve this neighborhood/city
+    const { data: couriers } = await supabase.from('couriers').select('name, phone, neighborhoods, city')
+      .eq('is_active', true).eq('operational_status', 'available');
+    if (!couriers?.length) return;
+
+    const matching = couriers.filter(c => {
+      const servesCity = c.city?.toLowerCase() === city.toLowerCase();
+      const servesNeighborhood = (c.neighborhoods || []).some((n: string) => n.toLowerCase() === neighborhood.toLowerCase());
+      return servesCity || servesNeighborhood;
+    });
+
+    for (const c of matching) {
+      if (!c.phone) continue;
+      const phone = c.phone.replace(/\D/g, '');
+      const msg = encodeURIComponent(
+        `🚚 *Nova entrega disponível!*\n\n` +
+        `📍 Destino: ${neighborhood}, ${city}\n` +
+        `💰 Você recebe: ${fmt(courierNet)}\n\n` +
+        `Acesse o painel para aceitar:\n${window.location.origin}/freteiro`
+      );
+      // Open WhatsApp link (will open for the admin/system)
+      // In production, this would use WhatsApp Business API
+      window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
+    }
+  } catch (err) {
+    console.error('Error notifying couriers:', err);
+  }
+};
+
 interface ShippingOption {
   type: 'pickup' | 'store_delivery' | 'entregaai';
   label: string;
@@ -198,6 +229,9 @@ const CheckoutPage = () => {
           courier_net_amount: choice.price - feeAmount,
           status: 'waiting',
         });
+
+        // Notify couriers via WhatsApp
+        notifyCouriersWhatsApp(address.neighborhood, address.city, choice.price, choice.price - feeAmount);
       }
     }
 

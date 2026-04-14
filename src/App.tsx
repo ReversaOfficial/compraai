@@ -35,6 +35,7 @@ import CourierAvailable from "./pages/courier/CourierAvailable";
 import CourierHistory from "./pages/courier/CourierHistory";
 import CourierEarnings from "./pages/courier/CourierEarnings";
 import CourierProfile from "./pages/courier/CourierProfile";
+import CourierSignup from "./pages/courier/CourierSignup";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
@@ -97,6 +98,7 @@ const App = () => (
 
                       {/* Courier */}
                       <Route path="/freteiro" element={<CourierAvailable />} />
+                      <Route path="/freteiro/cadastro" element={<CourierSignup />} />
                       <Route path="/freteiro/historico" element={<CourierHistory />} />
                       <Route path="/freteiro/ganhos" element={<CourierEarnings />} />
                       <Route path="/freteiro/perfil" element={<CourierProfile />} />
