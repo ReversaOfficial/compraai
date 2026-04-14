@@ -6,12 +6,14 @@ import { products, categories, stores } from '@/data/mock';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useMedia } from '@/contexts/MediaContext';
 
 const ProductsPage = () => {
   const [params] = useSearchParams();
   const [sort, setSort] = useState(params.get('sort') || 'relevance');
   const [catFilter, setCatFilter] = useState<string[]>([]);
   const [storeFilter, setStoreFilter] = useState<string[]>([]);
+  const { isProductHighlighted } = useMedia();
 
   const filtered = useMemo(() => {
     let items = [...products];
@@ -25,8 +27,16 @@ const ProductsPage = () => {
       case 'newest': items.sort((a, b) => b.createdAt.localeCompare(a.createdAt)); break;
       case 'sold': items.sort((a, b) => b.sold - a.sold); break;
     }
+
+    // Highlighted (sponsored) products always appear first
+    items.sort((a, b) => {
+      const aH = isProductHighlighted(a.id) ? 1 : 0;
+      const bH = isProductHighlighted(b.id) ? 1 : 0;
+      return bH - aH;
+    });
+
     return items;
-  }, [sort, catFilter, storeFilter, params]);
+  }, [sort, catFilter, storeFilter, params, isProductHighlighted]);
 
   const toggleCat = (catId: string) => setCatFilter(prev => prev.includes(catId) ? prev.filter(x => x !== catId) : [...prev, catId]);
   const toggleStore = (s: string) => setStoreFilter(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
