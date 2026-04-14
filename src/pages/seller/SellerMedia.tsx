@@ -294,7 +294,7 @@ const BannerBuy = () => {
   );
 };
 
-// ── Product Highlight ────────────────────────────────────────────────────────
+// ── Product Highlight (multiple products) ────────────────────────────────────
 
 const ProductHighlightBuy = () => {
   const { user } = useAuth();
@@ -302,91 +302,117 @@ const ProductHighlightBuy = () => {
   const seller = user as SellerProfile;
 
   const [step, setStep] = useState<'form' | 'pay' | 'done'>('form');
-  const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [duration, setDuration] = useState<PromoDuration>(7);
 
   const sellerProducts = products.filter(p => p.storeId === 's1' || p.storeId === 's2');
-  const product = sellerProducts.find(p => p.id === selectedProduct);
-  const price = pricing.product_highlight_prices[duration];
+  const pricePerProduct = pricing.product_highlight_prices[duration];
+  const totalPrice = pricePerProduct * selectedProducts.length;
   const myHighlights = seller ? getSellerHighlights(seller.id) : [];
 
+  const toggleProduct = (pid: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(pid) ? prev.filter(id => id !== pid) : [...prev, pid]
+    );
+  };
+
   const handlePaid = (method: 'pix' | 'credit_card') => {
-    if (!seller || !product) return;
-    const rec = buyHighlight({
-      seller_id: seller.id, seller_name: seller.store_name,
-      product_id: product.id, product_name: product.name, product_image: product.image,
-      duration_days: duration, amount_paid: price,
-      payment_method: method,
-      payment_status: 'confirmed',
+    if (!seller || !selectedProducts.length) return;
+    selectedProducts.forEach(pid => {
+      const product = sellerProducts.find(p => p.id === pid);
+      if (!product) return;
+      const rec = buyHighlight({
+        seller_id: seller.id, seller_name: seller.store_name,
+        product_id: product.id, product_name: product.name, product_image: product.image,
+        duration_days: duration, amount_paid: pricePerProduct,
+        payment_method: method,
+        payment_status: 'confirmed',
+      });
+      confirmHighlightPayment(rec.id);
     });
-    confirmHighlightPayment(rec.id);
     setStep('done');
   };
 
   if (step === 'done') return (
     <div className="text-center space-y-4 py-4">
       <CheckCircle className="h-14 w-14 mx-auto text-emerald-500" />
-      <h3 className="text-lg font-bold">Produto em destaque!</h3>
-      <p className="text-sm text-muted-foreground">Seu produto aparecerá com badge "Patrocinado" nas listagens.</p>
-      <Button onClick={() => setStep('form')}>Destacar outro produto</Button>
+      <h3 className="text-lg font-bold">{selectedProducts.length > 1 ? `${selectedProducts.length} produtos em destaque!` : 'Produto em destaque!'}</h3>
+      <p className="text-sm text-muted-foreground">Seus produtos já aparecem no topo das listagens com badge "Patrocinado".</p>
+      <Button onClick={() => { setStep('form'); setSelectedProducts([]); }}>Destacar mais produtos</Button>
     </div>
   );
 
   if (step === 'pay') return (
-    <PaymentStep amount={price} onPaid={handlePaid} onBack={() => setStep('form')} />
+    <PaymentStep amount={totalPrice} onPaid={handlePaid} onBack={() => setStep('form')} />
   );
 
   return (
     <div className="space-y-6">
       <div className="rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 p-4 text-sm">
         <p className="font-semibold text-accent mb-1">⭐ Produto Patrocinado</p>
-        <p className="text-muted-foreground">Seu produto aparece no topo das listagens com badge "Patrocinado", aumentando visibilidade e cliques.</p>
+        <p className="text-muted-foreground">Seus produtos aparecem no topo das listagens com badge "Patrocinado". Selecione quantos quiser — o valor é somado automaticamente.</p>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
         {DURATIONS.map(d => (
           <button key={d} onClick={() => setDuration(d)}
-            className={`rounded-lg border-2 p-2 text-center text-xs transition-all ${duration === d ? 'border-accent bg-accent text-white' : 'border-border hover:border-accent/40'}`}>
+            className={`rounded-lg border-2 p-2 text-center text-xs transition-all ${duration === d ? 'border-accent bg-accent text-accent-foreground' : 'border-border hover:border-accent/40'}`}>
             <p className="font-bold">{d}d</p>
-            <p className={duration === d ? 'text-white/80' : 'text-muted-foreground'}>{fmt(pricing.product_highlight_prices[d])}</p>
+            <p className={duration === d ? 'text-accent-foreground/80' : 'text-muted-foreground'}>{fmt(pricing.product_highlight_prices[d])}/un</p>
           </button>
         ))}
       </div>
 
       <div className="space-y-2">
-        <Label>Produto a destacar</Label>
-        <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-          <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-          <SelectContent>
-            {sellerProducts.map(p => (
-              <SelectItem key={p.id} value={p.id}>
-                <div className="flex items-center gap-2">
-                  <img src={p.image} alt={p.name} className="h-6 w-6 rounded object-cover" />
-                  {p.name}
+        <Label>Selecione os produtos a destacar ({selectedProducts.length} selecionado{selectedProducts.length !== 1 ? 's' : ''})</Label>
+        <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-1">
+          {sellerProducts.map(p => {
+            const isSelected = selectedProducts.includes(p.id);
+            const alreadyActive = myHighlights.some(h => h.product_id === p.id && h.payment_status === 'confirmed' && h.expires_at > new Date().toISOString());
+            return (
+              <button
+                key={p.id}
+                onClick={() => !alreadyActive && toggleProduct(p.id)}
+                disabled={alreadyActive}
+                className={`flex items-center gap-3 rounded-lg border-2 p-3 text-left text-sm transition-all ${
+                  alreadyActive ? 'opacity-50 cursor-not-allowed border-border' :
+                  isSelected ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/40'
+                }`}
+              >
+                <img src={p.image} alt={p.name} className="h-12 w-12 rounded-lg object-cover shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">{fmt(p.promoPrice ?? p.price)}</p>
                 </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                {alreadyActive ? (
+                  <Badge className="bg-emerald-100 text-emerald-700 shrink-0">✓ Ativo</Badge>
+                ) : isSelected ? (
+                  <Badge className="bg-accent/20 text-accent shrink-0">✓ Selecionado</Badge>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {product && (
-        <div className="flex items-center gap-4 rounded-lg border p-3">
-          <img src={product.image} alt={product.name} className="h-14 w-14 rounded-lg object-cover" />
-          <div>
-            <p className="font-medium">{product.name}</p>
-            <p className="text-sm text-accent font-bold">{fmt(product.promoPrice ?? product.price)}</p>
+      {selectedProducts.length > 0 && (
+        <div className="rounded-lg bg-accent/5 border border-accent/20 p-4">
+          <div className="flex items-center justify-between text-sm mb-1">
+            <span className="text-muted-foreground">{selectedProducts.length} produto{selectedProducts.length > 1 ? 's' : ''} × {fmt(pricePerProduct)}</span>
           </div>
-          <Badge className="ml-auto bg-accent/10 text-accent">⭐ Patrocinado</Badge>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Duração: {duration} dias</p>
+            <p className="text-xl font-extrabold text-accent">{fmt(totalPrice)}</p>
+          </div>
         </div>
       )}
 
       <div className="flex items-center justify-between border-t pt-4">
         <div><p className="text-xs text-muted-foreground">Total</p>
-          <p className="text-2xl font-extrabold text-accent">{fmt(price)}/{duration}d</p></div>
-        <Button className="gap-2 rounded-full px-8 bg-accent hover:bg-accent/90" disabled={!selectedProduct}
+          <p className="text-2xl font-extrabold text-accent">{fmt(totalPrice)}</p></div>
+        <Button className="gap-2 rounded-full px-8 bg-accent hover:bg-accent/90" disabled={selectedProducts.length === 0}
           onClick={() => setStep('pay')}>
-          Destacar Produto <Sparkles className="h-4 w-4" />
+          Destacar {selectedProducts.length > 1 ? `${selectedProducts.length} Produtos` : 'Produto'} <Sparkles className="h-4 w-4" />
         </Button>
       </div>
 
