@@ -82,6 +82,7 @@ const App = () => (
                       <Route path="/lojista/financeiro" element={<SellerFinancials />} />
                       <Route path="/lojista/planos" element={<SellerPlans />} />
                       <Route path="/lojista/midia" element={<SellerMedia />} />
+                      <Route path="/lojista/entregas" element={<SellerDelivery />} />
                       <Route path="/lojista/configuracoes" element={<SellerSettings />} />
 
                       {/* Admin */}

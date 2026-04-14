@@ -186,11 +186,21 @@ const SellerProducts = () => {
                   </div>
                   <div><Label>Estoque</Label><Input type="number" placeholder="0" /></div>
                 </div>
-                <div className="flex items-center gap-2 text-sm p-3 bg-muted rounded-lg">
-                  <input type="checkbox" id="delivery" className="rounded" />
-                  <Label htmlFor="delivery">Disponível para entrega</Label>
-                  <input type="checkbox" id="pickup" className="rounded ml-3" />
-                  <Label htmlFor="pickup">Retirada na loja</Label>
+                <div className="space-y-2 p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1">Opções de recebimento</p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="pickup" className="rounded" defaultChecked />
+                    <Label htmlFor="pickup">Retirada na loja</Label>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="delivery" className="rounded" defaultChecked />
+                    <Label htmlFor="delivery">Entrega própria da loja</Label>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="entregaai" className="rounded" />
+                    <Label htmlFor="entregaai">EntregaAí (serviço de entrega da plataforma)</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Configure valores de frete em <a href="/lojista/entregas" className="text-primary underline">Entregas & Frete</a></p>
                 </div>
               </TabsContent>
               <TabsContent value="images" className="space-y-4">
