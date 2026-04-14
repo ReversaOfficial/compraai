@@ -35,6 +35,7 @@ import CourierAvailable from "./pages/courier/CourierAvailable";
 import CourierHistory from "./pages/courier/CourierHistory";
 import CourierEarnings from "./pages/courier/CourierEarnings";
 import CourierProfile from "./pages/courier/CourierProfile";
+import CourierSignup from "./pages/courier/CourierSignup";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
