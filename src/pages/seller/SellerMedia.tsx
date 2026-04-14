@@ -317,9 +317,9 @@ const ProductHighlightBuy = () => {
       product_id: product.id, product_name: product.name, product_image: product.image,
       duration_days: duration, amount_paid: price,
       payment_method: method,
-      payment_status: method === 'credit_card' ? 'confirmed' : 'pending',
+      payment_status: 'confirmed',
     });
-    if (method === 'credit_card') confirmHighlightPayment(rec.id);
+    confirmHighlightPayment(rec.id);
     setStep('done');
   };
 
