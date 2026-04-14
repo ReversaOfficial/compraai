@@ -198,6 +198,9 @@ const CheckoutPage = () => {
           courier_net_amount: choice.price - feeAmount,
           status: 'waiting',
         });
+
+        // Notify couriers via WhatsApp
+        notifyCouriersWhatsApp(address.neighborhood, address.city, choice.price, choice.price - feeAmount);
       }
     }
 
