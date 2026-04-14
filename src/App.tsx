@@ -31,6 +31,11 @@ import SellerPlans from "./pages/seller/SellerPlans";
 import SellerMedia from "./pages/seller/SellerMedia";
 import SellerDelivery from "./pages/seller/SellerDelivery";
 
+import CourierAvailable from "./pages/courier/CourierAvailable";
+import CourierHistory from "./pages/courier/CourierHistory";
+import CourierEarnings from "./pages/courier/CourierEarnings";
+import CourierProfile from "./pages/courier/CourierProfile";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -89,6 +94,12 @@ const App = () => (
                       <Route path="/lojista/midia" element={<SellerMedia />} />
                       <Route path="/lojista/entregas" element={<SellerDelivery />} />
                       <Route path="/lojista/configuracoes" element={<SellerSettings />} />
+
+                      {/* Courier */}
+                      <Route path="/freteiro" element={<CourierAvailable />} />
+                      <Route path="/freteiro/historico" element={<CourierHistory />} />
+                      <Route path="/freteiro/ganhos" element={<CourierEarnings />} />
+                      <Route path="/freteiro/perfil" element={<CourierProfile />} />
 
                       {/* Admin */}
                       <Route path="/admin" element={<AdminDashboard />} />
