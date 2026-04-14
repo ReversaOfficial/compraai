@@ -8,13 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2, Upload, Loader2 } from 'lucide-react';
+import { Megaphone, Sparkles, QrCode, CreditCard, CheckCircle, ArrowRight, Clock, BarChart2, Upload, Loader2, Copy, Check, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, SellerProfile } from '@/contexts/AuthContext';
 import { useMedia, DURATIONS, PromoDuration, BannerPosition } from '@/contexts/MediaContext';
 import { usePlans } from '@/contexts/PlansContext';
 import { products } from '@/data/mock';
 import { supabase } from '@/integrations/supabase/client';
+import { QRCodeSVG } from 'qrcode.react';
+
+// ── Tamanhos padrão por posição ──────────────────────────────────────────────
 
 const BANNER_SIZES: Record<string, { w: number; h: number; label: string }> = {
   dual_left: { w: 960, h: 540, label: '960×540' },
@@ -24,7 +27,6 @@ const BANNER_SIZES: Record<string, { w: number; h: number; label: string }> = {
   triple_2: { w: 640, h: 480, label: '640×480' },
   triple_3: { w: 640, h: 480, label: '640×480' },
 };
-
 const DEFAULT_SIZE = { w: 960, h: 540, label: '960×540' };
 
 function resizeImage(file: File, targetW: number, targetH: number): Promise<Blob> {
@@ -43,14 +45,40 @@ function resizeImage(file: File, targetW: number, targetH: number): Promise<Blob
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error('Falha ao converter'))),
-        'image/webp',
-        0.85,
+        'image/webp', 0.85,
       );
     };
     img.onerror = () => reject(new Error('Falha ao carregar imagem'));
     img.src = URL.createObjectURL(file);
   });
 }
+
+// ── PIX Payload (EMV BRCode) ─────────────────────────────────────────────────
+
+function buildPixPayload(pixKey: string, beneficiary: string, amount: number): string {
+  const pad = (id: string, val: string) => `${id}${val.length.toString().padStart(2, '0')}${val}`;
+  const gui = pad('00', 'br.gov.bcb.pix');
+  const key = pad('01', pixKey);
+  const merchantAccount = pad('26', gui + key);
+  const mcc = pad('52', '0000');
+  const currency = pad('53', '986');
+  const amountStr = pad('54', amount.toFixed(2));
+  const country = pad('58', 'BR');
+  const name = pad('59', beneficiary.substring(0, 25));
+  const city = pad('60', 'SAO PAULO');
+  const txid = pad('05', 'CA' + Date.now().toString(36).slice(-8));
+  const addData = pad('62', txid);
+  const payloadFormat = pad('00', '01');
+  const base = payloadFormat + merchantAccount + mcc + currency + amountStr + country + name + city + addData + '6304';
+  let crc = 0xFFFF;
+  for (let i = 0; i < base.length; i++) {
+    crc ^= base.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
+    crc &= 0xFFFF;
+  }
+  return base + crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const POSITIONS: { value: BannerPosition; label: string }[] = [
@@ -62,10 +90,13 @@ const POSITIONS: { value: BannerPosition; label: string }[] = [
   { value: 'triple_3', label: 'Banner Produto Rodapé Direita' },
 ];
 
-const PaymentStep = ({ amount, onPaid, onBack }: {
+// ── Payment Step ─────────────────────────────────────────────────────────────
+
+const PaymentStep = ({ amount, onPaid, onBack, description }: {
   amount: number;
   onPaid: (method: 'pix' | 'credit_card') => void;
   onBack: () => void;
+  description?: string;
 }) => {
   const { paymentConfig } = usePlans();
   const [method, setMethod] = useState<'pix' | 'credit_card'>('pix');
@@ -73,63 +104,183 @@ const PaymentStep = ({ amount, onPaid, onBack }: {
   const [cardName, setCardName] = useState('');
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+  const [installments, setInstallments] = useState('1');
   const [processing, setProcessing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const pixPayload = paymentConfig.pix_key
+    ? buildPixPayload(paymentConfig.pix_key, paymentConfig.pix_beneficiary || 'CompraAi', amount)
+    : '';
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixPayload);
+    setCopied(true);
+    toast.success('Código PIX copiado!');
+    setTimeout(() => setCopied(false), 3000);
+  };
 
   const handlePay = async () => {
-    if (method === 'credit_card' && (!cardNum || !cardName || !cardExp || !cardCvv)) {
-      toast.error('Preencha todos os dados do cartão'); return;
+    if (method === 'credit_card') {
+      if (!cardNum || cardNum.replace(/\s/g, '').length < 16) { toast.error('Número do cartão inválido'); return; }
+      if (!cardName) { toast.error('Preencha o nome do titular'); return; }
+      if (!cardExp || cardExp.length < 5) { toast.error('Validade inválida'); return; }
+      if (!cardCvv || cardCvv.length < 3) { toast.error('CVV inválido'); return; }
     }
     setProcessing(true);
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 2000));
     setProcessing(false);
     onPaid(method);
   };
 
+  const installmentOptions = [];
+  for (let i = 1; i <= 12; i++) {
+    const val = amount / i;
+    if (val >= 5) {
+      installmentOptions.push({
+        value: i.toString(),
+        label: i === 1 ? `1x de ${fmt(amount)} (sem juros)` : `${i}x de ${fmt(val)}${i <= 3 ? ' (sem juros)' : ''}`,
+      });
+    }
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="text-center p-4 bg-muted/50 rounded-lg">
-        <p className="text-xs text-muted-foreground">Total a pagar</p>
+    <div className="space-y-5">
+      {/* Valor */}
+      <div className="text-center p-5 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20">
+        <p className="text-xs text-muted-foreground mb-1">Total a pagar</p>
         <p className="text-3xl font-extrabold text-primary">{fmt(amount)}</p>
+        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
       </div>
+
+      {/* Método */}
       <div className="flex gap-2">
         <button onClick={() => setMethod('pix')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-bold transition-all ${method === 'pix' ? 'border-primary bg-primary text-white' : 'border-border'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-bold transition-all ${method === 'pix' ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40'}`}>
           <QrCode className="h-4 w-4" /> PIX
         </button>
         <button onClick={() => setMethod('credit_card')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-bold transition-all ${method === 'credit_card' ? 'border-primary bg-primary text-white' : 'border-border'}`}>
-          <CreditCard className="h-4 w-4" /> Cartão
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-bold transition-all ${method === 'credit_card' ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40'}`}>
+          <CreditCard className="h-4 w-4" /> Cartão de Crédito
         </button>
       </div>
-      {method === 'pix' && paymentConfig.pix_key && (
-        <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
-          <p className="font-semibold">Dados PIX</p>
-          <div><p className="text-xs text-muted-foreground">Chave ({paymentConfig.pix_key_type})</p>
-            <code className="block bg-white border rounded px-2 py-1 text-xs">{paymentConfig.pix_key}</code></div>
-          <div><p className="text-xs text-muted-foreground">Favorecido</p>
-            <p className="font-medium">{paymentConfig.pix_beneficiary}</p></div>
+
+      {/* ── PIX ── */}
+      {method === 'pix' && (
+        <div className="space-y-4">
+          {paymentConfig.pix_key ? (
+            <>
+              <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl border">
+                <p className="text-sm font-semibold text-foreground">Escaneie o QR Code para pagar</p>
+                <div className="p-3 bg-white rounded-lg shadow-sm border">
+                  <QRCodeSVG value={pixPayload} size={200} level="M" />
+                </div>
+                <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
+                  Abra o app do seu banco → Pagar via PIX → Escaneie o código acima
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">PIX Copia e Cola</p>
+                <div className="flex gap-2">
+                  <code className="flex-1 text-[10px] bg-muted rounded-lg p-3 break-all max-h-16 overflow-y-auto border font-mono">
+                    {pixPayload}
+                  </code>
+                  <Button variant="outline" size="icon" className="shrink-0 rounded-lg h-auto" onClick={handleCopyPix}>
+                    {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-muted/50 p-4 space-y-1.5 text-sm border">
+                <p className="font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Dados do favorecido</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <div><p className="text-[10px] text-muted-foreground">Chave ({paymentConfig.pix_key_type})</p>
+                    <p className="font-medium text-xs truncate">{paymentConfig.pix_key}</p></div>
+                  <div><p className="text-[10px] text-muted-foreground">Favorecido</p>
+                    <p className="font-medium text-xs">{paymentConfig.pix_beneficiary}</p></div>
+                </div>
+              </div>
+
+              <Button className="w-full gap-2 rounded-xl h-12" onClick={handlePay} disabled={processing}>
+                {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Confirmando...</> : <><CheckCircle className="h-4 w-4" /> Já realizei o pagamento</>}
+              </Button>
+            </>
+          ) : (
+            <div className="text-center p-6 rounded-xl bg-muted/50 border">
+              <QrCode className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Chave PIX não configurada.</p>
+              <p className="text-xs text-muted-foreground mt-1">Contate o administrador da plataforma.</p>
+            </div>
+          )}
         </div>
       )}
+
+      {/* ── Cartão ── */}
       {method === 'credit_card' && (
-        <div className="space-y-3">
-          <Input placeholder="0000 0000 0000 0000" value={cardNum} maxLength={19}
-            onChange={e => setCardNum(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} />
-          <Input placeholder="NOME NO CARTÃO" value={cardName}
-            onChange={e => setCardName(e.target.value.toUpperCase())} />
-          <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="MM/AA" value={cardExp} maxLength={5}
-              onChange={e => setCardExp(e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1/$2'))} />
-            <Input placeholder="CVV" value={cardCvv} maxLength={4} type="password"
-              onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))} />
+        <div className="space-y-4">
+          <div className="rounded-xl border p-5 space-y-4 bg-card">
+            <div className="flex items-center gap-2">
+              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pagamento seguro e criptografado</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Número do Cartão</Label>
+              <Input placeholder="0000 0000 0000 0000" value={cardNum} maxLength={19}
+                className="font-mono tracking-wider"
+                onChange={e => setCardNum(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nome do Titular</Label>
+              <Input placeholder="NOME COMO ESTÁ NO CARTÃO" value={cardName}
+                className="uppercase"
+                onChange={e => setCardName(e.target.value.toUpperCase())} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Validade</Label>
+                <Input placeholder="MM/AA" value={cardExp} maxLength={5}
+                  onChange={e => setCardExp(e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1/$2'))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">CVV</Label>
+                <Input placeholder="•••" value={cardCvv} maxLength={4} type="password"
+                  onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Parcelas</Label>
+              <Select value={installments} onValueChange={setInstallments}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {installmentOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button className="w-full gap-2 rounded-xl h-12 text-base font-bold" onClick={handlePay} disabled={processing}>
+            {processing ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</>
+            ) : (
+              <><Lock className="h-4 w-4" /> Pagar {fmt(amount)}{parseInt(installments) > 1 ? ` em ${installments}x` : ''}</>
+            )}
+          </Button>
+
+          <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
+            <span>🔒 SSL</span>
+            <span>💳 Visa / Master / Elo</span>
+            <span>🛡️ Ambiente Seguro</span>
           </div>
         </div>
       )}
-      <div className="flex gap-2 pt-2">
-        <Button variant="outline" onClick={onBack}>Voltar</Button>
-        <Button className="flex-1 gap-2" onClick={handlePay} disabled={processing}>
-          {processing ? 'Processando...' : `Pagar ${fmt(amount)}`}
-        </Button>
-      </div>
+
+      <Button variant="ghost" onClick={onBack} className="w-full text-sm">← Voltar</Button>
     </div>
   );
 };
@@ -198,7 +349,8 @@ const BannerBuy = () => {
   );
 
   if (step === 'pay') return (
-    <PaymentStep amount={price} onPaid={handlePaid} onBack={() => setStep('form')} />
+    <PaymentStep amount={price} onPaid={handlePaid} onBack={() => setStep('form')}
+      description={`Banner ${POSITIONS.find(p => p.value === form.position)?.label} · ${form.duration} dias`} />
   );
 
   return (
@@ -343,7 +495,8 @@ const ProductHighlightBuy = () => {
   );
 
   if (step === 'pay') return (
-    <PaymentStep amount={totalPrice} onPaid={handlePaid} onBack={() => setStep('form')} />
+    <PaymentStep amount={totalPrice} onPaid={handlePaid} onBack={() => setStep('form')}
+      description={`${selectedProducts.length} produto${selectedProducts.length > 1 ? 's' : ''} · ${duration} dias`} />
   );
 
   return (
