@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Sparkles } from 'lucide-react';
 import type { Product } from '@/data/mock';
 import { useCart } from '@/contexts/CartContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMedia } from '@/contexts/MediaContext';
 import { categories } from '@/data/mock';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -12,6 +13,9 @@ const ProductCard = ({ product }: { product: Product }) => {
   const { addItem } = useCart();
   const { user } = useAuth();
   const { isProductFav, toggleProductFav } = useFavorites();
+  const { isProductHighlighted } = useMedia();
+  const highlighted = isProductHighlighted(product.id);
+  const { isProductFav, toggleProductFav } = useFavorites();
   const discount = product.promoPrice
     ? Math.round((1 - product.promoPrice / product.price) * 100)
     : 0;
@@ -19,7 +23,13 @@ const ProductCard = ({ product }: { product: Product }) => {
   const cat = categories.find(c => c.id === product.categoryId);
 
   return (
-    <div className="group flex flex-col bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elevated overflow-hidden">
+    <div className={`group flex flex-col bg-card border transition-all duration-300 hover:shadow-elevated overflow-hidden ${highlighted ? 'border-accent/50 ring-1 ring-accent/20' : 'border-border hover:border-primary/30'}`}>
+      {/* Badge Patrocinado */}
+      {highlighted && (
+        <div className="flex items-center gap-1 bg-accent/10 text-accent text-[10px] font-bold px-3 py-1 text-center justify-center">
+          <Sparkles className="h-3 w-3" /> Patrocinado
+        </div>
+      )}
       {/* Imagem */}
       <Link to={`/produto/${product.id}`} className="relative overflow-hidden bg-secondary/20" style={{ aspectRatio: '1/1' }}>
         <img
