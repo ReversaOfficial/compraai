@@ -1,12 +1,14 @@
-import { Search, ShoppingCart, User, Menu, MapPin, LogIn, Heart, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, MapPin, LogIn, Heart, Bell, Globe } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { categories, products, stores } from '@/data/mock';
 import NotificationBell from './NotificationBell';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,11 +16,14 @@ import { supabase } from '@/integrations/supabase/client';
 const Header = () => {
   const { itemCount } = useCart();
   const { user } = useAuth();
+  const { lang, setLang, langs } = useLanguage();
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState<{ type: string; label: string; link: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
   const ref = useRef<HTMLFormElement>(null);
+
+  const langFlags: Record<string, string> = { 'pt-BR': '🇧🇷', en: '🇺🇸', de: '🇩🇪', fr: '🇫🇷' };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +127,21 @@ const Header = () => {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-base">
+                <span>{langFlags[lang] || '🌐'}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[140px]">
+              {langs.map(l => (
+                <DropdownMenuItem key={l.value} onClick={() => setLang(l.value)}
+                  className={lang === l.value ? 'bg-primary/10 font-semibold' : ''}>
+                  <span className="mr-2">{langFlags[l.value]}</span> {l.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon" className="md:hidden h-10 w-10" onClick={() => navigate('/busca')}>
             <Search className="h-5 w-5" />
           </Button>

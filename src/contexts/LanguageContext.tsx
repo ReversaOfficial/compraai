@@ -292,7 +292,18 @@ const LanguageContext = createContext<LanguageContextType>({
 export const useLanguage = () => useContext(LanguageContext);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [lang, setLang] = useState<Lang>('pt-BR');
+  const [lang, setLangState] = useState<Lang>(() => {
+    try {
+      const saved = localStorage.getItem('app-lang');
+      if (saved && ['pt-BR', 'en', 'de', 'fr'].includes(saved)) return saved as Lang;
+    } catch {}
+    return 'pt-BR';
+  });
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    try { localStorage.setItem('app-lang', l); } catch {}
+  };
 
   const t = (key: string) => translations[lang]?.[key] || translations['pt-BR']?.[key] || key;
 
