@@ -184,6 +184,83 @@ export type Database = {
           },
         ]
       }
+      delivery_zones: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          neighborhood: string
+          price: number
+          state: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          price?: number
+          state?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          price?: number
+          state?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entregaai_settings: {
+        Row: {
+          base_price: number
+          city: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          neighborhood: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -757,6 +834,7 @@ export type Database = {
       products: {
         Row: {
           allows_delivery: boolean | null
+          allows_entregaai: boolean | null
           allows_pickup: boolean | null
           avg_rating: number | null
           category: string | null
@@ -777,6 +855,7 @@ export type Database = {
         }
         Insert: {
           allows_delivery?: boolean | null
+          allows_entregaai?: boolean | null
           allows_pickup?: boolean | null
           avg_rating?: number | null
           category?: string | null
@@ -797,6 +876,7 @@ export type Database = {
         }
         Update: {
           allows_delivery?: boolean | null
+          allows_entregaai?: boolean | null
           allows_pickup?: boolean | null
           avg_rating?: number | null
           category?: string | null

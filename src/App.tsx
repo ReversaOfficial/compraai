@@ -29,6 +29,7 @@ import SellerFinancials from "./pages/seller/SellerFinancials";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerPlans from "./pages/seller/SellerPlans";
 import SellerMedia from "./pages/seller/SellerMedia";
+import SellerDelivery from "./pages/seller/SellerDelivery";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStores from "./pages/admin/AdminStores";
@@ -82,6 +83,7 @@ const App = () => (
                       <Route path="/lojista/financeiro" element={<SellerFinancials />} />
                       <Route path="/lojista/planos" element={<SellerPlans />} />
                       <Route path="/lojista/midia" element={<SellerMedia />} />
+                      <Route path="/lojista/entregas" element={<SellerDelivery />} />
                       <Route path="/lojista/configuracoes" element={<SellerSettings />} />
 
                       {/* Admin */}

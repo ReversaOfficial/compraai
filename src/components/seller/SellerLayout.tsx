@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, DollarSign, Settings, LogOut, Menu, CreditCard, AlertCircle, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, DollarSign, Settings, LogOut, Menu, CreditCard, AlertCircle, Megaphone, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/lojista', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/lojista/produtos', icon: Package, label: 'Produtos' },
   { to: '/lojista/pedidos', icon: ShoppingBag, label: 'Pedidos' },
+  { to: '/lojista/entregas', icon: Truck, label: 'Entregas & Frete' },
   { to: '/lojista/financeiro', icon: DollarSign, label: 'Financeiro' },
   { to: '/lojista/midia', icon: Megaphone, label: 'Mídia & Publicidade' },
   { to: '/lojista/planos', icon: CreditCard, label: 'Meu Plano' },
