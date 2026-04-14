@@ -30,6 +30,47 @@ export interface SectionBanner {
   store_name: string;
 }
 
+export interface SiteTheme {
+  primaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  foregroundColor: string;
+  cardColor: string;
+  mutedColor: string;
+  borderColor: string;
+  buttonRadius: string;
+  fontHeading: string;
+  fontBody: string;
+}
+
+export const DEFAULT_THEME: SiteTheme = {
+  primaryColor: '160 84% 28%',
+  accentColor: '28 90% 55%',
+  backgroundColor: '40 33% 98%',
+  foregroundColor: '220 25% 10%',
+  cardColor: '0 0% 100%',
+  mutedColor: '40 20% 94%',
+  borderColor: '220 13% 91%',
+  buttonRadius: '0.75rem',
+  fontHeading: 'Plus Jakarta Sans',
+  fontBody: 'Plus Jakarta Sans',
+};
+
+export const FONT_OPTIONS = [
+  'Plus Jakarta Sans',
+  'Inter',
+  'Poppins',
+  'Roboto',
+  'Open Sans',
+  'Montserrat',
+  'Lato',
+  'Nunito',
+  'Raleway',
+  'DM Sans',
+  'Outfit',
+  'Space Grotesk',
+];
+
 export interface SiteTexts {
   site_name: string;
   announcement_bar: string;
@@ -213,6 +254,7 @@ export const DEFAULT_TEXTS: SiteTexts = {
 const HERO_KEY = 'compraai_hero_slides';
 const BANNERS_KEY = 'compraai_section_banners';
 const TEXTS_KEY = 'compraai_site_texts';
+const THEME_KEY = 'compraai_site_theme';
 
 const load = <T,>(key: string, fallback: T): T => {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
@@ -230,6 +272,8 @@ interface SiteConfigCtx {
   setSectionBanners: (b: SectionBanner[]) => void;
   texts: SiteTexts;
   setTexts: (t: SiteTexts) => void;
+  theme: SiteTheme;
+  setTheme: (t: SiteTheme) => void;
   getBanner: (pos: SectionBanner['position']) => SectionBanner | undefined;
   getBanners: (pos: SectionBanner['position']) => SectionBanner[];
 }
@@ -242,14 +286,53 @@ export const useSiteConfig = () => {
   return c;
 };
 
+const applyTheme = (t: SiteTheme) => {
+  const root = document.documentElement;
+  root.style.setProperty('--primary', t.primaryColor);
+  root.style.setProperty('--accent', t.accentColor);
+  root.style.setProperty('--background', t.backgroundColor);
+  root.style.setProperty('--foreground', t.foregroundColor);
+  root.style.setProperty('--card', t.cardColor);
+  root.style.setProperty('--card-foreground', t.foregroundColor);
+  root.style.setProperty('--popover', t.cardColor);
+  root.style.setProperty('--popover-foreground', t.foregroundColor);
+  root.style.setProperty('--muted', t.mutedColor);
+  root.style.setProperty('--border', t.borderColor);
+  root.style.setProperty('--input', t.borderColor);
+  root.style.setProperty('--ring', t.primaryColor);
+  root.style.setProperty('--radius', t.buttonRadius);
+  root.style.setProperty('--sidebar-primary', t.primaryColor);
+  root.style.setProperty('--gradient-hero', `linear-gradient(135deg, hsl(${t.primaryColor}), hsl(${t.primaryColor} / 0.8))`);
+  root.style.setProperty('--gradient-accent', `linear-gradient(135deg, hsl(${t.accentColor}), hsl(${t.accentColor} / 0.85))`);
+  root.style.fontFamily = `'${t.fontBody}', system-ui, sans-serif`;
+
+  // Load Google Font dynamically
+  const fonts = new Set([t.fontHeading, t.fontBody]);
+  fonts.forEach(f => {
+    const id = `gfont-${f.replace(/\s+/g, '-')}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f)}:wght@400;500;600;700;800&display=swap`;
+      document.head.appendChild(link);
+    }
+  });
+};
+
 export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
   const [heroSlides, setHeroSlidesState] = useState<HeroSlide[]>(() => load(HERO_KEY, DEFAULT_HERO_SLIDES));
   const [sectionBanners, setSectionBannersState] = useState<SectionBanner[]>(() => load(BANNERS_KEY, DEFAULT_SECTION_BANNERS));
   const [texts, setTextsState] = useState<SiteTexts>(() => load(TEXTS_KEY, DEFAULT_TEXTS));
+  const [theme, setThemeState] = useState<SiteTheme>(() => load(THEME_KEY, DEFAULT_THEME));
 
   const setHeroSlides = (s: HeroSlide[]) => { setHeroSlidesState(s); save(HERO_KEY, s); };
   const setSectionBanners = (b: SectionBanner[]) => { setSectionBannersState(b); save(BANNERS_KEY, b); };
   const setTexts = (t: SiteTexts) => { setTextsState(t); save(TEXTS_KEY, t); };
+  const setTheme = (t: SiteTheme) => { setThemeState(t); save(THEME_KEY, t); applyTheme(t); };
+
+  // Apply theme on mount
+  useEffect(() => { applyTheme(theme); }, []);
 
   const getBanner = (pos: SectionBanner['position']) =>
     sectionBanners.find(b => b.position === pos && b.is_active);
@@ -258,7 +341,7 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
     sectionBanners.filter(b => b.position === pos && b.is_active);
 
   return (
-    <Ctx.Provider value={{ heroSlides, setHeroSlides, sectionBanners, setSectionBanners, texts, setTexts, getBanner, getBanners }}>
+    <Ctx.Provider value={{ heroSlides, setHeroSlides, sectionBanners, setSectionBanners, texts, setTexts, theme, setTheme, getBanner, getBanners }}>
       {children}
     </Ctx.Provider>
   );
