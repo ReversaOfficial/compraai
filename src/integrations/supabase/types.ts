@@ -236,7 +236,15 @@ export type Database = {
       }
       couriers: {
         Row: {
+          address_city: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
           city: string
+          cnpj: string | null
+          cpf: string
           created_at: string
           id: string
           is_active: boolean
@@ -244,12 +252,26 @@ export type Database = {
           neighborhoods: string[]
           operational_status: string
           phone: string
+          pix_key: string | null
+          pix_key_type: string | null
+          registration_status: string
+          selfie_url: string | null
           updated_at: string
           user_id: string | null
+          vehicle_photo_url: string | null
+          vehicle_plate: string | null
           vehicle_type: string
         }
         Insert: {
+          address_city?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
           city?: string
+          cnpj?: string | null
+          cpf?: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -257,12 +279,26 @@ export type Database = {
           neighborhoods?: string[]
           operational_status?: string
           phone?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          registration_status?: string
+          selfie_url?: string | null
           updated_at?: string
           user_id?: string | null
+          vehicle_photo_url?: string | null
+          vehicle_plate?: string | null
           vehicle_type?: string
         }
         Update: {
+          address_city?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
           city?: string
+          cnpj?: string | null
+          cpf?: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -270,8 +306,14 @@ export type Database = {
           neighborhoods?: string[]
           operational_status?: string
           phone?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          registration_status?: string
+          selfie_url?: string | null
           updated_at?: string
           user_id?: string | null
+          vehicle_photo_url?: string | null
+          vehicle_plate?: string | null
           vehicle_type?: string
         }
         Relationships: []
