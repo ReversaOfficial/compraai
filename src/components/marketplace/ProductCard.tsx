@@ -15,7 +15,6 @@ const ProductCard = ({ product }: { product: Product }) => {
   const { isProductFav, toggleProductFav } = useFavorites();
   const { isProductHighlighted } = useMedia();
   const highlighted = isProductHighlighted(product.id);
-  const { isProductFav, toggleProductFav } = useFavorites();
   const discount = product.promoPrice
     ? Math.round((1 - product.promoPrice / product.price) * 100)
     : 0;
