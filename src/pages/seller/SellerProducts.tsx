@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMedia } from '@/contexts/MediaContext';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { Link } from 'react-router-dom';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -28,6 +29,7 @@ const SellerProducts = () => {
   const [promoteOpen, setPromoteOpen] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { isProductHighlighted } = useMedia();
+  const { texts } = useSiteConfig();
 
   const filtered = storeProducts.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -61,6 +63,27 @@ const SellerProducts = () => {
   return (
     <SellerLayout>
       <div className="space-y-6">
+        {texts.seller_banner_image && (
+          <div className="w-full overflow-hidden rounded-xl">
+            {texts.seller_banner_link ? (
+              <a href={texts.seller_banner_link} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={texts.seller_banner_image}
+                  alt="Banner"
+                  className="w-full object-cover rounded-xl"
+                  style={{ maxHeight: 136 }}
+                />
+              </a>
+            ) : (
+              <img
+                src={texts.seller_banner_image}
+                alt="Banner"
+                className="w-full object-cover rounded-xl"
+                style={{ maxHeight: 136 }}
+              />
+            )}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Produtos</h1>
