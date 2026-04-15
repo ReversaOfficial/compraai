@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CreditCard, QrCode, MapPin, Truck, CheckCircle2, LogIn, Package } from 'lucide-react';
+import ReceiptUpload from '@/components/ReceiptUpload';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth, CustomerProfile } from '@/contexts/AuthContext';
@@ -247,6 +248,15 @@ const CheckoutPage = () => {
         </div>
         <h1 className="text-2xl font-bold mb-2">Pedido Confirmado!</h1>
         <p className="text-muted-foreground mb-2">Pedido #{orderId}</p>
+        {payment === 'pix' && (
+          <div className="my-4 max-w-sm mx-auto">
+            <ReceiptUpload
+              paymentType="order"
+              paymentReferenceId={orderId}
+              amount={grandTotal}
+            />
+          </div>
+        )}
         <p className="text-sm text-muted-foreground mb-8">Acompanhe o status do seu pedido na sua conta.</p>
         <div className="flex gap-3 justify-center">
           <Button className="rounded-full" onClick={() => navigate('/conta')}>Ver Meus Pedidos</Button>

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Check, ArrowRight, CreditCard, QrCode, Star, AlertTriangle, CheckCircle, Package } from 'lucide-react';
+import ReceiptUpload from '@/components/ReceiptUpload';
 import { toast } from 'sonner';
 import { useAuth, SellerProfile } from '@/contexts/AuthContext';
 import { usePlans } from '@/contexts/PlansContext';
@@ -349,14 +350,27 @@ const SellerPlans = () => {
                 </>
               ) : (
                 <>
-                  <h2 className="text-xl font-extrabold">Aguardando PIX</h2>
+                  <h2 className="text-xl font-extrabold">Envie o Comprovante PIX</h2>
                   <p className="text-sm text-muted-foreground">
-                    Seu pedido de upgrade foi registrado. Ao confirmarmos o pagamento PIX, seu plano <strong>{selectedPlan?.name}</strong> será ativado automaticamente.
+                    Envie o comprovante para ativar seu plano <strong>{selectedPlan?.name}</strong> automaticamente.
                   </p>
                   <div className="rounded-lg bg-muted p-3 text-sm">
                     <p className="text-xs text-muted-foreground mb-1">Valor transferido</p>
                     <p className="text-2xl font-extrabold">{fmt(amount)}</p>
                   </div>
+                  <ReceiptUpload
+                    paymentType="plan_subscription"
+                    paymentReferenceId={paymentId}
+                    amount={amount}
+                    onUploaded={() => {
+                      confirmPayment(paymentId);
+                      updateProfile({
+                        plan_id: selectedPlanId,
+                        plan_limit: selectedPlan!.product_limit,
+                        plan_expires_at: new Date(Date.now() + (billing === 'annual' ? 365 : 30) * 86400000).toISOString(),
+                      } as any);
+                    }}
+                  />
                 </>
               )}
               <Button className="w-full rounded-full" onClick={handleReset}>Voltar ao Painel</Button>
