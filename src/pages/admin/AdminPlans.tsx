@@ -173,16 +173,23 @@ const AdminPlans = () => {
                     onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Preço anual total (R$)</Label>
-                  <Input type="number" step="0.01" value={form.annual_price}
-                    onChange={e => setForm(f => ({ ...f, annual_price: e.target.value }))} />
-                  <p className="text-xs text-muted-foreground">
-                    {form.annual_price && form.monthly_price
-                      ? `= ${fmt(parseFloat(form.annual_price) / 12)}/mês — desconto ${Math.max(0, Math.round((1 - (parseFloat(form.annual_price) / 12) / parseFloat(form.monthly_price)) * 100))}%`
-                      : 'Digite o valor total anual'}
-                  </p>
+                  <Label>Desconto anual (%)</Label>
+                  <Input type="number" step="1" min="0" max="100" value={form.discount_pct}
+                    onChange={e => setForm(f => ({ ...f, discount_pct: e.target.value }))} />
                 </div>
               </div>
+              {form.monthly_price && form.discount_pct && (
+                <div className="rounded-lg bg-muted/50 p-3 text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Valor anual total</span>
+                    <span className="font-bold">{fmt(calcAnnual(form.monthly_price, form.discount_pct))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Equivalente mensal (anual)</span>
+                    <span className="font-medium">{fmt(calcAnnual(form.monthly_price, form.discount_pct) / 12)}/mês</span>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <p className="text-sm font-medium">Destacar como "Mais Popular"</p>
