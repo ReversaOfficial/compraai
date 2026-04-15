@@ -56,6 +56,7 @@ import AdminCourierFinancials from "./pages/admin/AdminCourierFinancials";
 
 import NotFound from "./pages/NotFound";
 import PromoPopup from "./components/marketplace/PromoPopup";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
