@@ -102,7 +102,7 @@ const Header = () => {
             className="rounded-xl object-contain"
             style={{ width: 60, height: 60 }}
           />
-          <div className="hidden sm:block">
+          <div>
             <span className="text-xl font-extrabold tracking-tight">{texts.site_name || 'Compra Aí'}</span>
           </div>
         </Link>
