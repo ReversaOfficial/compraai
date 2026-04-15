@@ -467,6 +467,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           neighborhood: string
+          origin: string
           platform_fee_percent: number
           state: string
           updated_at: string
@@ -478,6 +479,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           neighborhood?: string
+          origin?: string
           platform_fee_percent?: number
           state?: string
           updated_at?: string
@@ -489,6 +491,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           neighborhood?: string
+          origin?: string
           platform_fee_percent?: number
           state?: string
           updated_at?: string

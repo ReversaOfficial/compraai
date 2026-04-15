@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -22,6 +23,8 @@ interface FreightRoute {
   base_price: number;
   platform_fee_percent: number;
   is_active: boolean;
+  origin?: string;
+  created_at?: string;
 }
 
 const emptyForm = { city: '', neighborhood: '', state: '', base_price: 0, platform_fee_percent: 10 };
@@ -31,6 +34,7 @@ const AdminFreightTable = () => {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [originFilter, setOriginFilter] = useState<string>('all');
 
   const fetch = async () => {
     const { data } = await supabase.from('entregaai_settings').select('*').order('city').order('neighborhood');
@@ -47,7 +51,7 @@ const AdminFreightTable = () => {
 
   const save = async () => {
     if (!form.city) { toast.error('Cidade é obrigatória'); return; }
-    const payload = { ...form, is_active: true };
+    const payload = { ...form, is_active: true, origin: 'manual' } as any;
     if (editId) {
       await supabase.from('entregaai_settings').update(payload).eq('id', editId);
       toast.success('Rota atualizada');
@@ -79,6 +83,22 @@ const AdminFreightTable = () => {
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />Nova Rota</Button>
         </div>
 
+        {/* Filter */}
+        <div className="flex items-center gap-3">
+          <Label className="text-sm">Filtrar por origem:</Label>
+          <Select value={originFilter} onValueChange={setOriginFilter}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="manual">Manual (admin)</SelectItem>
+              <SelectItem value="auto">Automático (sistema)</SelectItem>
+            </SelectContent>
+          </Select>
+          {routes.filter(r => r.origin === 'auto').length > 0 && (
+            <Badge variant="outline" className="gap-1"><AlertTriangle className="h-3 w-3" />{routes.filter(r => r.origin === 'auto').length} bairro(s) criado(s) automaticamente</Badge>
+          )}
+        </div>
+
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -86,6 +106,7 @@ const AdminFreightTable = () => {
                 <TableRow>
                   <TableHead>Cidade</TableHead>
                   <TableHead>Bairro</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Valor Frete</TableHead>
                   <TableHead>Taxa Plataforma</TableHead>
                   <TableHead>Líquido Freteiro</TableHead>
@@ -94,13 +115,18 @@ const AdminFreightTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {routes.map(r => {
+                {routes.filter(r => originFilter === 'all' || r.origin === originFilter).map(r => {
                   const fee = r.base_price * r.platform_fee_percent / 100;
                   const net = r.base_price - fee;
                   return (
-                    <TableRow key={r.id}>
+                    <TableRow key={r.id} className={r.origin === 'auto' ? 'bg-yellow-50/50 dark:bg-yellow-900/10' : ''}>
                       <TableCell className="font-medium">{r.city}</TableCell>
                       <TableCell>{r.neighborhood || 'Toda cidade'}</TableCell>
+                      <TableCell>
+                        <Badge variant={r.origin === 'auto' ? 'secondary' : 'outline'} className="text-xs">
+                          {r.origin === 'auto' ? '🤖 Auto' : '✏️ Manual'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{fmt(r.base_price)}</TableCell>
                       <TableCell>{r.platform_fee_percent}% ({fmt(fee)})</TableCell>
                       <TableCell className="font-medium text-primary">{fmt(net)}</TableCell>
@@ -114,8 +140,8 @@ const AdminFreightTable = () => {
                     </TableRow>
                   );
                 })}
-                {routes.length === 0 && (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma rota cadastrada</TableCell></TableRow>
+                {routes.filter(r => originFilter === 'all' || r.origin === originFilter).length === 0 && (
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma rota encontrada</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
