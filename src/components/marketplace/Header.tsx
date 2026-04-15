@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +13,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { categories, products, stores } from '@/data/mock';
 import NotificationBell from './NotificationBell';
 import { supabase } from '@/integrations/supabase/client';
+import defaultLogo from '@/assets/compraai-logo.png';
 
 const Header = () => {
   const { itemCount } = useCart();
   const { user } = useAuth();
   const { lang, setLang, langs } = useLanguage();
+  const { texts } = useSiteConfig();
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState<{ type: string; label: string; link: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -93,11 +96,13 @@ const Header = () => {
         </Sheet>
 
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-hero shadow-sm">
-            <span className="text-lg font-extrabold text-white">C</span>
-          </div>
+          <img
+            src={texts.logo_url || defaultLogo}
+            alt={texts.site_name || 'Compra Aí'}
+            className="h-10 w-10 rounded-xl object-contain"
+          />
           <div className="hidden sm:block">
-            <span className="text-xl font-extrabold tracking-tight">Compra Aí</span>
+            <span className="text-xl font-extrabold tracking-tight">{texts.site_name || 'Compra Aí'}</span>
           </div>
         </Link>
 

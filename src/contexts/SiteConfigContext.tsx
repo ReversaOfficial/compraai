@@ -73,6 +73,7 @@ export const FONT_OPTIONS = [
 
 export interface SiteTexts {
   site_name: string;
+  logo_url: string;
   announcement_bar: string;
   hero_default_tag: string;
   footer_copyright: string;
@@ -222,6 +223,7 @@ const DEFAULT_SECTION_BANNERS: SectionBanner[] = [
 
 export const DEFAULT_TEXTS: SiteTexts = {
   site_name: 'Compra Aí',
+  logo_url: '',
   announcement_bar: '🚚 Frete grátis acima de R$ 150 · Entrega e retirada na sua cidade',
   hero_default_tag: 'Novidades 2026',
   footer_copyright: '© 2026 Compra Aí. Todos os direitos reservados.',
