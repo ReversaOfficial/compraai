@@ -20,13 +20,20 @@ const AdminPlans = () => {
   const sellers = getAllSellers();
 
   const [editing, setEditing] = useState<Plan | null>(null);
-  const [form, setForm] = useState({ monthly_price: '', annual_price: '', name: '', popular: false });
+  const [form, setForm] = useState({ monthly_price: '', discount_pct: '15', name: '', popular: false });
+
+  const calcAnnual = (monthly: string, disc: string) => {
+    const m = parseFloat(monthly);
+    const d = parseFloat(disc);
+    if (isNaN(m) || isNaN(d)) return 0;
+    return +(m * 12 * (1 - d / 100)).toFixed(2);
+  };
 
   const openEdit = (plan: Plan) => {
     setEditing(plan);
     setForm({
       monthly_price: plan.monthly_price.toString(),
-      annual_price: plan.annual_price.toString(),
+      discount_pct: plan.discount_pct.toString(),
       name: plan.name,
       popular: plan.popular ?? false,
     });
@@ -35,18 +42,29 @@ const AdminPlans = () => {
   const handleSave = () => {
     if (!editing) return;
     const monthly = parseFloat(form.monthly_price);
-    const annual = parseFloat(form.annual_price);
-    if (isNaN(monthly) || isNaN(annual)) { toast.error('Valores inválidos'); return; }
+    const discount = parseFloat(form.discount_pct);
+    if (isNaN(monthly) || isNaN(discount) || discount < 0 || discount > 100) { toast.error('Valores inválidos'); return; }
+    const annual = calcAnnual(form.monthly_price, form.discount_pct);
     const annual_monthly_price = annual / 12;
-    const discount_pct = Math.round((1 - annual_monthly_price / monthly) * 100);
+
+    const priceChanged = monthly !== editing.monthly_price;
+    const storesOnPlan = getStoresOnPlan(editing.id);
+
     updatePlan(editing.id, {
       name: form.name,
       monthly_price: monthly,
       annual_price: annual,
       annual_monthly_price,
-      discount_pct: Math.max(0, discount_pct),
+      discount_pct: Math.max(0, discount),
       popular: form.popular,
     });
+
+    if (priceChanged && storesOnPlan > 0) {
+      const effectiveDate = new Date();
+      effectiveDate.setDate(effectiveDate.getDate() + 30);
+      toast.info(`Novo valor será cobrado das ${storesOnPlan} loja(s) ativa(s) a partir de ${effectiveDate.toLocaleDateString('pt-BR')}`);
+    }
+
     setEditing(null);
   };
 
