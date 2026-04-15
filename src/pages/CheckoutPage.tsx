@@ -168,7 +168,7 @@ const CheckoutPage = () => {
         options.push({ type: 'store_delivery', label: 'Entrega pela loja', description: `Frete: ${fmt(matchedZone.price)}`, price: matchedZone.price, storeId: sid, storeName });
       }
 
-      // EntregaAI - match by neighborhood then city
+      // EntregaAI - match by neighborhood then city, fallback to "outside city" entry
       const matchedEA = entregaaiZones.find(z =>
         z.neighborhood?.toLowerCase() === address.neighborhood.toLowerCase() &&
         z.city?.toLowerCase() === address.city.toLowerCase()
@@ -176,10 +176,15 @@ const CheckoutPage = () => {
         z.city?.toLowerCase() === address.city.toLowerCase() && !z.neighborhood
       ) || entregaaiZones.find(z =>
         z.city?.toLowerCase() === address.city.toLowerCase()
+      ) || entregaaiZones.find(z =>
+        z.city?.toLowerCase().includes('fora de') && !z.neighborhood
       );
 
       if (matchedEA) {
-        const neighborhoodLabel = address.neighborhood || matchedEA.neighborhood || matchedEA.city;
+        const isOutsideCity = matchedEA.city?.toLowerCase().includes('fora de');
+        const neighborhoodLabel = isOutsideCity
+          ? `${address.neighborhood || address.city} (fora da área principal)`
+          : (address.neighborhood || matchedEA.neighborhood || matchedEA.city);
         options.push({
           type: 'entregaai',
           label: 'EntregaAí',
