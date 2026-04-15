@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -22,6 +23,8 @@ interface FreightRoute {
   base_price: number;
   platform_fee_percent: number;
   is_active: boolean;
+  origin?: string;
+  created_at?: string;
 }
 
 const emptyForm = { city: '', neighborhood: '', state: '', base_price: 0, platform_fee_percent: 10 };

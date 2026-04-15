@@ -89,6 +89,8 @@ const CheckoutPage = () => {
   // Fetch delivery zones for all stores in cart
   const storeIds = useMemo(() => [...new Set(items.map(i => i.product.storeId))], [items]);
 
+  const [entregaaiLoading, setEntregaaiLoading] = useState(false);
+
   useEffect(() => {
     const fetchZones = async () => {
       if (storeIds.length === 0) return;
@@ -99,6 +101,42 @@ const CheckoutPage = () => {
     };
     fetchZones();
   }, [storeIds]);
+
+  // Auto-create missing neighborhood in entregaai_settings when address changes
+  useEffect(() => {
+    if (!address.neighborhood || !address.city || entregaaiZones.length === 0 && !address.neighborhood) return;
+    const neighborhood = address.neighborhood.trim();
+    const city = address.city.trim();
+    if (!neighborhood || !city) return;
+
+    const matched = entregaaiZones.find(z =>
+      z.neighborhood?.toLowerCase() === neighborhood.toLowerCase() &&
+      z.city?.toLowerCase() === city.toLowerCase()
+    ) || entregaaiZones.find(z =>
+      z.city?.toLowerCase() === city.toLowerCase() && !z.neighborhood
+    );
+
+    if (!matched && !entregaaiLoading) {
+      // Auto-create neighborhood with default R$30
+      setEntregaaiLoading(true);
+      const createNeighborhood = async () => {
+        const { data, error } = await supabase.from('entregaai_settings').insert({
+          neighborhood,
+          city,
+          state: address.state || '',
+          base_price: 30,
+          platform_fee_percent: 10,
+          is_active: true,
+          origin: 'auto',
+        } as any).select().single();
+        if (!error && data) {
+          setEntregaaiZones(prev => [...prev, data]);
+        }
+        setEntregaaiLoading(false);
+      };
+      createNeighborhood();
+    }
+  }, [address.neighborhood, address.city, entregaaiZones]);
 
   // Calculate shipping options per store
   const storeShippingOptions = useMemo(() => {
@@ -130,18 +168,26 @@ const CheckoutPage = () => {
         options.push({ type: 'store_delivery', label: 'Entrega pela loja', description: `Frete: ${fmt(matchedZone.price)}`, price: matchedZone.price, storeId: sid, storeName });
       }
 
-      // EntregaAI
+      // EntregaAI - match by neighborhood then city
       const matchedEA = entregaaiZones.find(z =>
-        z.neighborhood.toLowerCase() === address.neighborhood.toLowerCase() &&
-        z.city.toLowerCase() === address.city.toLowerCase()
+        z.neighborhood?.toLowerCase() === address.neighborhood.toLowerCase() &&
+        z.city?.toLowerCase() === address.city.toLowerCase()
       ) || entregaaiZones.find(z =>
-        z.city.toLowerCase() === address.city.toLowerCase() && !z.neighborhood
+        z.city?.toLowerCase() === address.city.toLowerCase() && !z.neighborhood
       ) || entregaaiZones.find(z =>
-        z.city.toLowerCase() === address.city.toLowerCase()
+        z.city?.toLowerCase() === address.city.toLowerCase()
       );
 
       if (matchedEA) {
-        options.push({ type: 'entregaai', label: 'EntregaAí', description: `Entrega pela plataforma · ${fmt(matchedEA.base_price)}`, price: matchedEA.base_price, storeId: sid, storeName });
+        const neighborhoodLabel = address.neighborhood || matchedEA.neighborhood || matchedEA.city;
+        options.push({
+          type: 'entregaai',
+          label: 'EntregaAí',
+          description: `📍 ${neighborhoodLabel} · Frete: ${fmt(matchedEA.base_price)}`,
+          price: matchedEA.base_price,
+          storeId: sid,
+          storeName,
+        });
       }
 
       result[sid] = options;
