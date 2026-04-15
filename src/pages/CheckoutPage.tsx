@@ -114,6 +114,8 @@ const CheckoutPage = () => {
       z.city?.toLowerCase() === city.toLowerCase()
     ) || entregaaiZones.find(z =>
       z.city?.toLowerCase() === city.toLowerCase() && !z.neighborhood
+    ) || entregaaiZones.find(z =>
+      z.city?.toLowerCase().includes('fora de')
     );
 
     if (!matched && !entregaaiLoading) {
