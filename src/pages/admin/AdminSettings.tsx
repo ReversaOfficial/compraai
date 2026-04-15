@@ -13,9 +13,6 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteConfig, SiteTexts, SiteTheme, DEFAULT_TEXTS, DEFAULT_THEME, FONT_OPTIONS } from '@/contexts/SiteConfigContext';
 import defaultLogo from '@/assets/compraai-logo.png';
-import { toast } from 'sonner';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useSiteConfig, SiteTexts, SiteTheme, DEFAULT_TEXTS, DEFAULT_THEME, FONT_OPTIONS } from '@/contexts/SiteConfigContext';
 
 const Field = ({ label, value, onChange, area = false, hint }: {
   label: string; value: string;
