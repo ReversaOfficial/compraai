@@ -99,6 +99,8 @@ export interface SiteTexts {
   cta_seller_title: string;
   cta_seller_subtitle: string;
   cta_seller_button: string;
+  seller_banner_image: string;
+  seller_banner_link: string;
 }
 
 const DEFAULT_HERO_SLIDES: HeroSlide[] = [
@@ -249,6 +251,8 @@ export const DEFAULT_TEXTS: SiteTexts = {
   cta_seller_title: 'Sua loja no marketplace local.',
   cta_seller_subtitle: 'Cadastre gratuitamente e venda para toda a cidade.',
   cta_seller_button: 'Quero Vender',
+  seller_banner_image: '',
+  seller_banner_link: '',
 };
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
