@@ -440,6 +440,83 @@ const AdminSettings = () => {
             </Card>
           </TabsContent>
 
+          {/* ── BANNER LOJISTA ── */}
+          <TabsContent value="banner_lojista">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Banner do Painel Lojista</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Banner exibido no topo da página de produtos do lojista (957×136 px recomendado).
+                </p>
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Imagem do Banner</Label>
+                  <Input
+                    value={local.seller_banner_image}
+                    onChange={e => set('seller_banner_image')(e.target.value)}
+                    placeholder="https://... ou faça upload abaixo"
+                    className="text-sm mt-1"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="seller-banner-upload"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const dataUrl = reader.result as string;
+                        const img = new window.Image();
+                        img.onload = () => {
+                          const canvas = document.createElement('canvas');
+                          canvas.width = 957;
+                          canvas.height = 136;
+                          const ctx2 = canvas.getContext('2d')!;
+                          const scale = Math.max(957 / img.width, 136 / img.height);
+                          const w = img.width * scale;
+                          const h = img.height * scale;
+                          ctx2.drawImage(img, (957 - w) / 2, (136 - h) / 2, w, h);
+                          const resized = canvas.toDataURL('image/jpeg', 0.9);
+                          set('seller_banner_image')(resized);
+                          toast.success('Banner carregado! Clique "Salvar Tudo" para aplicar.');
+                        };
+                        img.src = dataUrl;
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 gap-2"
+                    onClick={() => document.getElementById('seller-banner-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4" /> Upload de Imagem
+                  </Button>
+                </div>
+                {local.seller_banner_image && (
+                  <div className="rounded-lg border overflow-hidden">
+                    <img src={local.seller_banner_image} alt="Preview" className="w-full object-cover" style={{ maxHeight: 136 }} />
+                  </div>
+                )}
+                <Field
+                  label="Link do botão (URL ao clicar no banner)"
+                  value={local.seller_banner_link}
+                  onChange={set('seller_banner_link')}
+                  hint="Deixe vazio para o banner não ser clicável"
+                />
+                {local.seller_banner_image && (
+                  <Button variant="destructive" size="sm" onClick={() => { set('seller_banner_image')(''); set('seller_banner_link')(''); }}>
+                    Remover Banner
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ── IDIOMA ── */}
           <TabsContent value="idioma">
             <Card className="shadow-card">
