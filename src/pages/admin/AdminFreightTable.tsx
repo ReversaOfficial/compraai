@@ -35,8 +35,6 @@ const AdminFreightTable = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [originFilter, setOriginFilter] = useState<string>('all');
-  const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
 
   const fetch = async () => {
     const { data } = await supabase.from('entregaai_settings').select('*').order('city').order('neighborhood');
