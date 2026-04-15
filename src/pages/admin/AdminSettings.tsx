@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Type, Globe, RotateCcw, Save, Store, Megaphone, LayoutGrid, Palette } from 'lucide-react';
+import { Type, Globe, RotateCcw, Save, Store, Megaphone, LayoutGrid, Palette, Upload, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteConfig, SiteTexts, SiteTheme, DEFAULT_TEXTS, DEFAULT_THEME, FONT_OPTIONS } from '@/contexts/SiteConfigContext';
+import defaultLogo from '@/assets/compraai-logo.png';
 
 const Field = ({ label, value, onChange, area = false, hint }: {
   label: string; value: string;
@@ -110,6 +111,40 @@ const AdminSettings = () => {
   const handleLangChange = (v: string) => {
     setLang(v as any);
     toast.success(`Idioma alterado para ${langs.find(l => l.value === v)?.label}`);
+  };
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // Create canvas to resize to 40x40 standard
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 80; // 2x for retina
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d')!;
+        // Fit image proportionally
+        const scale = Math.min(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        const resizedUrl = canvas.toDataURL('image/png');
+        setLocal(t => ({ ...t, logo_url: resizedUrl }));
+        toast.success('Logo carregado! Clique "Salvar Tudo" para aplicar.');
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   const radiusNum = parseFloat(localTheme.buttonRadius) || 0.75;
@@ -281,6 +316,47 @@ const AdminSettings = () => {
 
           {/* ── GERAL ── */}
           <TabsContent value="geral">
+            {/* Logo do Site */}
+            <Card className="shadow-card mb-6">
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Logo do Site</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-6">
+                  <div className="shrink-0">
+                    <img
+                      src={local.logo_url || defaultLogo}
+                      alt="Logo atual"
+                      className="h-16 w-16 rounded-xl object-contain border bg-muted/30 p-1"
+                    />
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <p className="text-sm text-muted-foreground">
+                      Envie uma nova imagem para substituir o logo. A imagem será redimensionada automaticamente para 40×40px (padrão do cabeçalho).
+                    </p>
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="gap-2 rounded-full" onClick={() => logoInputRef.current?.click()}>
+                        <Upload className="h-4 w-4" /> Enviar Nova Imagem
+                      </Button>
+                      {local.logo_url && (
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                          setLocal(t => ({ ...t, logo_url: '' }));
+                          toast.info('Logo restaurado para o padrão. Salve para aplicar.');
+                        }}>
+                          Restaurar Padrão
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="shadow-card">
               <CardHeader><CardTitle className="text-base">Informações Gerais</CardTitle></CardHeader>
               <CardContent className="space-y-5">
