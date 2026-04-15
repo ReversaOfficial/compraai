@@ -84,43 +84,43 @@ const App = () => (
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/cadastro" element={<SignupPage />} />
                       <Route path="/cadastro-lojista" element={<SellerSignupPage />} />
-                      <Route path="/conta" element={<AccountPage />} />
+                      <Route path="/conta" element={<ProtectedRoute requiredRole="customer"><AccountPage /></ProtectedRoute>} />
                       <Route path="/loja/:id" element={<StorePage />} />
 
                       {/* Seller */}
-                      <Route path="/lojista" element={<SellerDashboard />} />
-                      <Route path="/lojista/produtos" element={<SellerProducts />} />
-                      <Route path="/lojista/pedidos" element={<SellerOrders />} />
-                      <Route path="/lojista/financeiro" element={<SellerFinancials />} />
-                      <Route path="/lojista/planos" element={<SellerPlans />} />
-                      <Route path="/lojista/midia" element={<SellerMedia />} />
-                      <Route path="/lojista/entregas" element={<SellerDelivery />} />
-                      <Route path="/lojista/configuracoes" element={<SellerSettings />} />
+                      <Route path="/lojista" element={<ProtectedRoute requiredRole="seller"><SellerDashboard /></ProtectedRoute>} />
+                      <Route path="/lojista/produtos" element={<ProtectedRoute requiredRole="seller"><SellerProducts /></ProtectedRoute>} />
+                      <Route path="/lojista/pedidos" element={<ProtectedRoute requiredRole="seller"><SellerOrders /></ProtectedRoute>} />
+                      <Route path="/lojista/financeiro" element={<ProtectedRoute requiredRole="seller"><SellerFinancials /></ProtectedRoute>} />
+                      <Route path="/lojista/planos" element={<ProtectedRoute requiredRole="seller"><SellerPlans /></ProtectedRoute>} />
+                      <Route path="/lojista/midia" element={<ProtectedRoute requiredRole="seller"><SellerMedia /></ProtectedRoute>} />
+                      <Route path="/lojista/entregas" element={<ProtectedRoute requiredRole="seller"><SellerDelivery /></ProtectedRoute>} />
+                      <Route path="/lojista/configuracoes" element={<ProtectedRoute requiredRole="seller"><SellerSettings /></ProtectedRoute>} />
 
                       {/* Courier */}
-                      <Route path="/freteiro" element={<CourierAvailable />} />
+                      <Route path="/freteiro" element={<ProtectedRoute requiredRole="courier"><CourierAvailable /></ProtectedRoute>} />
                       <Route path="/freteiro/cadastro" element={<CourierSignup />} />
-                      <Route path="/freteiro/historico" element={<CourierHistory />} />
-                      <Route path="/freteiro/ganhos" element={<CourierEarnings />} />
-                      <Route path="/freteiro/perfil" element={<CourierProfile />} />
+                      <Route path="/freteiro/historico" element={<ProtectedRoute requiredRole="courier"><CourierHistory /></ProtectedRoute>} />
+                      <Route path="/freteiro/ganhos" element={<ProtectedRoute requiredRole="courier"><CourierEarnings /></ProtectedRoute>} />
+                      <Route path="/freteiro/perfil" element={<ProtectedRoute requiredRole="courier"><CourierProfile /></ProtectedRoute>} />
 
                       {/* Admin */}
-                      <Route path="/admin" element={<AdminDashboard />} />
-                      <Route path="/admin/lojistas" element={<AdminStores />} />
-                      <Route path="/admin/produtos" element={<AdminProducts />} />
-                      <Route path="/admin/pedidos" element={<AdminOrders />} />
-                      <Route path="/admin/financeiro" element={<AdminFinancials />} />
-                      <Route path="/admin/planos" element={<AdminPlans />} />
-                      <Route path="/admin/banners" element={<AdminBanners />} />
-                      <Route path="/admin/pagamentos" element={<AdminPayments />} />
-                      <Route path="/admin/avaliacoes" element={<AdminReviews />} />
-                      <Route path="/admin/notificacoes" element={<AdminNotifications />} />
-                      <Route path="/admin/popup" element={<AdminPopup />} />
-                      <Route path="/admin/tabela-frete" element={<AdminFreightTable />} />
-                      <Route path="/admin/freteiros" element={<AdminCouriers />} />
-                      <Route path="/admin/entregas" element={<AdminDeliveries />} />
-                      <Route path="/admin/financeiro-freteiros" element={<AdminCourierFinancials />} />
-                      <Route path="/admin/configuracoes" element={<AdminSettings />} />
+                      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+                      <Route path="/admin/lojistas" element={<ProtectedRoute requiredRole="admin"><AdminStores /></ProtectedRoute>} />
+                      <Route path="/admin/produtos" element={<ProtectedRoute requiredRole="admin"><AdminProducts /></ProtectedRoute>} />
+                      <Route path="/admin/pedidos" element={<ProtectedRoute requiredRole="admin"><AdminOrders /></ProtectedRoute>} />
+                      <Route path="/admin/financeiro" element={<ProtectedRoute requiredRole="admin"><AdminFinancials /></ProtectedRoute>} />
+                      <Route path="/admin/planos" element={<ProtectedRoute requiredRole="admin"><AdminPlans /></ProtectedRoute>} />
+                      <Route path="/admin/banners" element={<ProtectedRoute requiredRole="admin"><AdminBanners /></ProtectedRoute>} />
+                      <Route path="/admin/pagamentos" element={<ProtectedRoute requiredRole="admin"><AdminPayments /></ProtectedRoute>} />
+                      <Route path="/admin/avaliacoes" element={<ProtectedRoute requiredRole="admin"><AdminReviews /></ProtectedRoute>} />
+                      <Route path="/admin/notificacoes" element={<ProtectedRoute requiredRole="admin"><AdminNotifications /></ProtectedRoute>} />
+                      <Route path="/admin/popup" element={<ProtectedRoute requiredRole="admin"><AdminPopup /></ProtectedRoute>} />
+                      <Route path="/admin/tabela-frete" element={<ProtectedRoute requiredRole="admin"><AdminFreightTable /></ProtectedRoute>} />
+                      <Route path="/admin/freteiros" element={<ProtectedRoute requiredRole="admin"><AdminCouriers /></ProtectedRoute>} />
+                      <Route path="/admin/entregas" element={<ProtectedRoute requiredRole="admin"><AdminDeliveries /></ProtectedRoute>} />
+                      <Route path="/admin/financeiro-freteiros" element={<ProtectedRoute requiredRole="admin"><AdminCourierFinancials /></ProtectedRoute>} />
+                      <Route path="/admin/configuracoes" element={<ProtectedRoute requiredRole="admin"><AdminSettings /></ProtectedRoute>} />
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
