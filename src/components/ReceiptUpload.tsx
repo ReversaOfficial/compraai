@@ -83,11 +83,11 @@ const ReceiptUpload = ({ paymentType, paymentReferenceId, amount, onUploaded, on
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = await supabase.storage
         .from('payment-receipts')
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
 
-      const receiptUrl = urlData.publicUrl;
+      const receiptUrl = urlData?.signedUrl || path;
 
       const { data: receipt, error: insertError } = await supabase
         .from('payment_receipts')
