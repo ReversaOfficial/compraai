@@ -350,9 +350,9 @@ const SellerPlans = () => {
                 </>
               ) : (
                 <>
-                  <h2 className="text-xl font-extrabold">Envie o Comprovante PIX</h2>
+                  <h2 className="text-xl font-extrabold">Aguardando Confirmação PIX</h2>
                   <p className="text-sm text-muted-foreground">
-                    Envie o comprovante para ativar seu plano <strong>{selectedPlan?.name}</strong> automaticamente.
+                    Seu plano <strong>{selectedPlan?.name}</strong> será ativado automaticamente em até 5 minutos, ou imediatamente ao enviar o comprovante.
                   </p>
                   <div className="rounded-lg bg-muted p-3 text-sm">
                     <p className="text-xs text-muted-foreground mb-1">Valor transferido</p>
@@ -363,6 +363,14 @@ const SellerPlans = () => {
                     paymentReferenceId={paymentId}
                     amount={amount}
                     onUploaded={() => {
+                      confirmPayment(paymentId);
+                      updateProfile({
+                        plan_id: selectedPlanId,
+                        plan_limit: selectedPlan!.product_limit,
+                        plan_expires_at: new Date(Date.now() + (billing === 'annual' ? 365 : 30) * 86400000).toISOString(),
+                      } as any);
+                    }}
+                    onTimerComplete={() => {
                       confirmPayment(paymentId);
                       updateProfile({
                         plan_id: selectedPlanId,
