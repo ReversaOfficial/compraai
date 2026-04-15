@@ -51,7 +51,7 @@ const AdminFreightTable = () => {
 
   const save = async () => {
     if (!form.city) { toast.error('Cidade é obrigatória'); return; }
-    const payload = { ...form, is_active: true };
+    const payload = { ...form, is_active: true, origin: 'manual' } as any;
     if (editId) {
       await supabase.from('entregaai_settings').update(payload).eq('id', editId);
       toast.success('Rota atualizada');
