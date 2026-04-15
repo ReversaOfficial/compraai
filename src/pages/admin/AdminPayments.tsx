@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,20 +6,38 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Landmark, QrCode, Save, CheckCircle } from 'lucide-react';
+import { Landmark, QrCode, Save, CheckCircle, FileImage, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlans, PaymentConfig } from '@/contexts/PlansContext';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+interface Receipt {
+  id: string;
+  receipt_url: string;
+  payment_type: string;
+  payment_reference_id: string;
+  amount: number;
+  status: string;
+  confirmed_at: string | null;
+  created_at: string;
+}
 
 const AdminPayments = () => {
   const { paymentConfig, setPaymentConfig, payments } = usePlans();
   const [form, setForm] = useState<PaymentConfig>({ ...paymentConfig });
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const sf = (k: keyof PaymentConfig) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
   const handleSave = () => setPaymentConfig(form);
+
+  useEffect(() => {
+    supabase.from('payment_receipts').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setReceipts(data as Receipt[]); });
+  }, []);
 
   const statusColor: Record<string, string> = {
     pending: 'bg-amber-100 text-amber-700',
@@ -31,40 +49,99 @@ const AdminPayments = () => {
   const totalRevenue = payments.filter(p => p.status === 'confirmed').reduce((a, p) => a + p.amount, 0);
   const pending = payments.filter(p => p.status === 'pending').length;
 
+  const typeLabel: Record<string, string> = {
+    plan_subscription: '📋 Plano',
+    order: '🛒 Pedido',
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Pagamentos & Recebimentos</h1>
-          <p className="text-sm text-muted-foreground">Configure sua conta bancária/PIX e acompanhe pagamentos dos lojistas</p>
+          <p className="text-sm text-muted-foreground">Configure sua conta bancária/PIX e acompanhe pagamentos</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="shadow-card"><CardContent className="p-4 text-center">
             <p className="text-2xl font-extrabold text-primary">{fmt(totalRevenue)}</p>
             <p className="text-xs text-muted-foreground mt-1">Total Recebido</p>
           </CardContent></Card>
           <Card className="shadow-card"><CardContent className="p-4 text-center">
             <p className="text-2xl font-extrabold text-amber-500">{pending}</p>
-            <p className="text-xs text-muted-foreground mt-1">Pagamentos Pendentes</p>
+            <p className="text-xs text-muted-foreground mt-1">Pendentes</p>
           </CardContent></Card>
           <Card className="shadow-card"><CardContent className="p-4 text-center">
             <p className="text-2xl font-extrabold text-emerald-600">{payments.filter(p => p.status === 'confirmed').length}</p>
             <p className="text-xs text-muted-foreground mt-1">Confirmados</p>
           </CardContent></Card>
+          <Card className="shadow-card"><CardContent className="p-4 text-center">
+            <p className="text-2xl font-extrabold text-blue-600">{receipts.length}</p>
+            <p className="text-xs text-muted-foreground mt-1">Comprovantes</p>
+          </CardContent></Card>
         </div>
 
-        <Tabs defaultValue="config">
+        <Tabs defaultValue="receipts">
           <TabsList className="mb-4">
+            <TabsTrigger value="receipts" className="gap-2"><FileImage className="h-4 w-4" /> Comprovantes</TabsTrigger>
             <TabsTrigger value="config" className="gap-2"><Landmark className="h-4 w-4" /> Configurar Conta</TabsTrigger>
             <TabsTrigger value="history" className="gap-2"><CheckCircle className="h-4 w-4" /> Histórico</TabsTrigger>
           </TabsList>
 
+          {/* Receipts */}
+          <TabsContent value="receipts">
+            <Card className="shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Referência</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Valor</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Comprovante</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Data</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {receipts.length === 0 && (
+                      <tr><td colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Nenhum comprovante recebido</td></tr>
+                    )}
+                    {receipts.map(r => (
+                      <tr key={r.id} className="hover:bg-muted/20">
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className="text-[10px]">
+                            {typeLabel[r.payment_type] || r.payment_type}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.payment_reference_id.slice(0, 12)}...</td>
+                        <td className="px-4 py-3 text-right font-bold">{fmt(r.amount)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${statusColor[r.status] || ''}`}>
+                            {statusLabel[r.status] || r.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <a href={r.receipt_url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <ExternalLink className="h-3 w-3" /> Ver
+                          </a>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(r.created_at).toLocaleDateString('pt-BR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </TabsContent>
+
           {/* Config */}
           <TabsContent value="config">
             <div className="grid md:grid-cols-2 gap-6">
-              {/* PIX */}
               <Card className="shadow-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -96,7 +173,6 @@ const AdminPayments = () => {
                 </CardContent>
               </Card>
 
-              {/* Bank */}
               <Card className="shadow-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
