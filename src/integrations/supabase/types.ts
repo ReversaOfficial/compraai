@@ -757,6 +757,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_receipts: {
+        Row: {
+          amount: number
+          confirmed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          payment_reference_id: string
+          payment_type: string
+          receipt_url: string
+          status: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          amount?: number
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_reference_id?: string
+          payment_type?: string
+          receipt_url?: string
+          status?: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_reference_id?: string
+          payment_type?: string
+          receipt_url?: string
+          status?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       payment_splits: {
         Row: {
           created_at: string
