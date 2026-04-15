@@ -99,7 +99,8 @@ const Header = () => {
           <img
             src={texts.logo_url || defaultLogo}
             alt={texts.site_name || 'Compra Aí'}
-            className="h-10 w-10 rounded-xl object-contain"
+            className="rounded-xl object-contain"
+            style={{ width: 60, height: 60 }}
           />
           <div className="hidden sm:block">
             <span className="text-xl font-extrabold tracking-tight">{texts.site_name || 'Compra Aí'}</span>
