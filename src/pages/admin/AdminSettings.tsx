@@ -174,6 +174,7 @@ const AdminSettings = () => {
             <TabsTrigger value="hero" className="gap-2"><Megaphone className="h-4 w-4" /> Hero</TabsTrigger>
             <TabsTrigger value="secoes" className="gap-2"><LayoutGrid className="h-4 w-4" /> Seções</TabsTrigger>
             <TabsTrigger value="lojista" className="gap-2"><Store className="h-4 w-4" /> CTA Lojista</TabsTrigger>
+            <TabsTrigger value="banner_lojista" className="gap-2"><Image className="h-4 w-4" /> Banner Lojista</TabsTrigger>
             <TabsTrigger value="idioma" className="gap-2"><Globe className="h-4 w-4" /> Idioma</TabsTrigger>
           </TabsList>
 
