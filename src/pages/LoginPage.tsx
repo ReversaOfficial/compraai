@@ -9,6 +9,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LogIn, Mail, Lock, ShoppingBag, Store, ShieldCheck, User, Truck } from 'lucide-react';
+import { checkRateLimit, clearRateLimit, sanitizeText } from '@/lib/security';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().trim().email('E-mail inválido').max(255, 'E-mail muito longo'),
+  password: z.string().min(1, 'Senha obrigatória').max(200, 'Senha muito longa'),
+});
+const adminSchema = z.object({
+  login: z.string().trim().min(1, 'Login obrigatório').max(60, 'Login muito longo'),
+  password: z.string().min(1, 'Senha obrigatória').max(200, 'Senha muito longa'),
+});
+
+const RATE_LIMIT = { max: 5, windowMs: 60_000 }; // 5 attempts per minute
 
 type Tab = 'customer' | 'seller' | 'admin' | 'courier';
 
@@ -24,20 +37,29 @@ const LoginPage = () => {
 
   const handleCustomerSeller = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    const rl = checkRateLimit({ key: `login_${tab}`, ...RATE_LIMIT });
+    if (!rl.allowed) { toast.error(`Muitas tentativas. Tente novamente em ${rl.retryAfter}s.`); return; }
     setLoading(true);
     const { error } = tab === 'customer'
-      ? await signInCustomer(email, password)
-      : await signInSeller(email, password);
+      ? await signInCustomer(parsed.data.email, parsed.data.password)
+      : await signInSeller(parsed.data.email, parsed.data.password);
     setLoading(false);
     if (error) { toast.error(error); return; }
+    clearRateLimit(`login_${tab}`);
     toast.success('Bem-vindo de volta!');
     navigate(tab === 'customer' ? '/conta' : '/lojista');
   };
 
   const handleCourier = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    const rl = checkRateLimit({ key: 'login_courier', ...RATE_LIMIT });
+    if (!rl.allowed) { toast.error(`Muitas tentativas. Tente novamente em ${rl.retryAfter}s.`); return; }
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     setLoading(false);
     if (error) { toast.error('E-mail ou senha inválidos'); return; }
     // Check if user is a registered courier
@@ -47,16 +69,23 @@ const LoginPage = () => {
       await supabase.auth.signOut();
       return;
     }
+    clearRateLimit('login_courier');
     toast.success('Bem-vindo, freteiro!');
     navigate('/freteiro');
   };
 
   const handleAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = adminSchema.safeParse({ login: adminLogin, password: adminPass });
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    // Stricter rate limit for admin
+    const rl = checkRateLimit({ key: 'login_admin', max: 3, windowMs: 60_000 });
+    if (!rl.allowed) { toast.error(`Muitas tentativas. Tente novamente em ${rl.retryAfter}s.`); return; }
     setLoading(true);
-    const { error } = await signInAdmin(adminLogin, adminPass);
+    const { error } = await signInAdmin(parsed.data.login, parsed.data.password);
     setLoading(false);
     if (error) { toast.error(error); return; }
+    clearRateLimit('login_admin');
     toast.success('Acesso administrativo concedido!');
     navigate('/admin');
   };

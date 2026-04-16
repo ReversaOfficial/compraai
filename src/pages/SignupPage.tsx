@@ -8,6 +8,17 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { UserPlus, Mail, Lock, User, Phone, CreditCard, MapPin } from 'lucide-react';
+import { checkRateLimit, clearRateLimit } from '@/lib/security';
+import { z } from 'zod';
+
+const step1Schema = z.object({
+  full_name: z.string().trim().min(2, 'Nome muito curto').max(120, 'Nome muito longo'),
+  email: z.string().trim().email('E-mail inválido').max(255, 'E-mail muito longo'),
+  cpf: z.string().trim().min(11, 'CPF inválido').max(20, 'CPF inválido'),
+  phone: z.string().trim().min(8, 'Telefone inválido').max(25, 'Telefone inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(200, 'Senha muito longa'),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, { message: 'As senhas não coincidem', path: ['confirmPassword'] });
 
 const SignupPage = () => {
   const [step, setStep] = useState(0);
@@ -34,25 +45,23 @@ const SignupPage = () => {
 
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.full_name.trim()) { toast.error('Nome é obrigatório'); return; }
-    if (!form.email.trim()) { toast.error('E-mail é obrigatório'); return; }
-    if (!form.cpf.trim()) { toast.error('CPF é obrigatório'); return; }
-    if (!form.phone.trim()) { toast.error('Telefone é obrigatório'); return; }
-    if (form.password.length < 6) { toast.error('Senha deve ter pelo menos 6 caracteres'); return; }
-    if (form.password !== form.confirmPassword) { toast.error('As senhas não coincidem'); return; }
+    const parsed = step1Schema.safeParse(form);
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setStep(1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const rl = checkRateLimit({ key: 'signup_customer', max: 3, windowMs: 60_000 });
+    if (!rl.allowed) { toast.error(`Muitas tentativas. Tente novamente em ${rl.retryAfter}s.`); return; }
     setLoading(true);
 
     const { error } = await signUpCustomer({
-      email: form.email,
+      email: form.email.trim(),
       password: form.password,
-      full_name: form.full_name,
-      phone: form.phone,
-      cpf: form.cpf,
+      full_name: form.full_name.trim(),
+      phone: form.phone.trim(),
+      cpf: form.cpf.trim(),
     });
 
     if (error) {
@@ -60,6 +69,7 @@ const SignupPage = () => {
       toast.error(error);
       return;
     }
+    clearRateLimit('signup_customer');
 
     // Salvar endereço no perfil
     updateProfile({
