@@ -16,6 +16,7 @@ import { usePlans } from '@/contexts/PlansContext';
 import { products } from '@/data/mock';
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
+import { ACCEPT_IMAGE, validateUploadFile } from '@/lib/security';
 
 // ── Tamanhos padrão por posição ──────────────────────────────────────────────
 
@@ -305,6 +306,8 @@ const BannerBuy = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
     setUploading(true);
     try {
       const resized = await resizeImage(file, currentSize.w, currentSize.h);
@@ -389,7 +392,7 @@ const BannerBuy = () => {
               {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
               {uploading ? 'Enviando...' : 'Enviar imagem'}
             </Button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            <input ref={fileRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleUpload} />
           </div>
           {form.image && <img src={form.image} alt="Preview" className="w-full rounded-lg border aspect-video object-cover mt-2" />}
           <p className="text-xs text-muted-foreground">Redimensionada automaticamente para {currentSize.label}px</p>
