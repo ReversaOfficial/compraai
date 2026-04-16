@@ -1614,6 +1614,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_entregaai_zone: {
+        Args: {
+          _base_price: number
+          _city: string
+          _neighborhood: string
+          _state: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

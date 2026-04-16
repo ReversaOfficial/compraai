@@ -122,17 +122,21 @@ const CheckoutPage = () => {
       // Auto-create neighborhood with default R$30
       setEntregaaiLoading(true);
       const createNeighborhood = async () => {
-        const { data, error } = await supabase.from('entregaai_settings').insert({
-          neighborhood,
-          city,
-          state: address.state || '',
-          base_price: 30,
-          platform_fee_percent: 10,
-          is_active: true,
-          origin: 'auto',
-        } as any).select().single();
-        if (!error && data) {
-          setEntregaaiZones(prev => [...prev, data]);
+        // Use secure RPC: server-side validates auth, length and price range
+        const { data: newId, error } = await supabase.rpc('create_entregaai_zone', {
+          _city: city,
+          _neighborhood: neighborhood,
+          _state: address.state || '',
+          _base_price: 30,
+        });
+        if (!error && newId) {
+          // Refetch the row so we have the full record
+          const { data: row } = await supabase
+            .from('entregaai_settings')
+            .select('*')
+            .eq('id', newId as string)
+            .maybeSingle();
+          if (row) setEntregaaiZones(prev => [...prev, row]);
         }
         setEntregaaiLoading(false);
       };
