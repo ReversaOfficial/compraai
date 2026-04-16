@@ -4,6 +4,7 @@ import { Upload, CheckCircle, Loader2, Image as ImageIcon, Timer } from 'lucide-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
+import { ACCEPT_IMAGE_OR_PDF, validateUploadFile, sanitizeFilename } from '@/lib/security';
 
 interface ReceiptUploadProps {
   paymentType: 'plan_subscription' | 'order' | 'banner' | 'highlight';
@@ -59,15 +60,8 @@ const ReceiptUpload = ({ paymentType, paymentReferenceId, amount, onUploaded, on
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      toast.error('Envie uma imagem ou PDF do comprovante');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 5MB.');
-      return;
-    }
+    const check = validateUploadFile(file, { allowPdf: true, maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
 
     setUploading(true);
 
@@ -75,7 +69,8 @@ const ReceiptUpload = ({ paymentType, paymentReferenceId, amount, onUploaded, on
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Faça login para enviar o comprovante'); return; }
 
-      const ext = file.name.split('.').pop();
+      const safeName = sanitizeFilename(file.name);
+      const ext = (safeName.split('.').pop() || 'bin').toLowerCase();
       const path = `${user.id}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from('payment-receipts')
@@ -173,7 +168,7 @@ const ReceiptUpload = ({ paymentType, paymentReferenceId, amount, onUploaded, on
       <input
         ref={fileRef}
         type="file"
-        accept="image/*,application/pdf"
+        accept={ACCEPT_IMAGE_OR_PDF}
         className="hidden"
         onChange={handleUpload}
       />

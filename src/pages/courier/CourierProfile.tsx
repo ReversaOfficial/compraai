@@ -43,7 +43,10 @@ const CourierProfile = () => {
 
   const uploadPhoto = async (file: File, type: string) => {
     if (!courier) return;
-    const ext = file.name.split('.').pop();
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
+    const safeName = sanitizeFilename(file.name);
+    const ext = (safeName.split('.').pop() || 'jpg').toLowerCase();
     const path = `${courier.user_id}/${type}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('courier-documents').upload(path, file);
     if (error) { toast.error('Erro no upload'); return; }
