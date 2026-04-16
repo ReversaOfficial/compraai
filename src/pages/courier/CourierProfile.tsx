@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
+import { ACCEPT_IMAGE, validateUploadFile, sanitizeFilename } from '@/lib/security';
 
 const vehicleTypes = [
   { value: 'bicicleta', label: '🚲 Bicicleta' },
@@ -43,7 +44,10 @@ const CourierProfile = () => {
 
   const uploadPhoto = async (file: File, type: string) => {
     if (!courier) return;
-    const ext = file.name.split('.').pop();
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
+    const safeName = sanitizeFilename(file.name);
+    const ext = (safeName.split('.').pop() || 'jpg').toLowerCase();
     const path = `${courier.user_id}/${type}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('courier-documents').upload(path, file);
     if (error) { toast.error('Erro no upload'); return; }
@@ -140,14 +144,14 @@ const CourierProfile = () => {
               <Label>Foto de Rosto</Label>
               {courier.selfie_url && <img src={courier.selfie_url} alt="Selfie" className="h-32 w-32 object-cover rounded-lg mt-2 mb-2" />}
               <label className="flex items-center gap-2 text-sm text-primary cursor-pointer"><Upload className="h-4 w-4" /> Trocar foto
-                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'selfie')} />
+                <input type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'selfie')} />
               </label>
             </div>
             <div>
               <Label>Foto do Veículo</Label>
               {courier.vehicle_photo_url && <img src={courier.vehicle_photo_url} alt="Veículo" className="h-32 w-32 object-cover rounded-lg mt-2 mb-2" />}
               <label className="flex items-center gap-2 text-sm text-primary cursor-pointer"><Upload className="h-4 w-4" /> Trocar foto
-                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'vehicle')} />
+                <input type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'vehicle')} />
               </label>
             </div>
           </CardContent>

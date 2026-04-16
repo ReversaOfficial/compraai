@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Eye, Save, Upload, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ACCEPT_IMAGE, validateUploadFile } from '@/lib/security';
 
 const TARGET_W = 960;
 const TARGET_H = 540;
@@ -71,6 +72,8 @@ const AdminPopup = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
     setUploading(true);
     try {
       const resized = await resizeImage(file);
@@ -136,7 +139,7 @@ const AdminPopup = () => {
                 <Input
                   ref={fileRef}
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPT_IMAGE}
                   className="hidden"
                   onChange={handleUpload}
                 />

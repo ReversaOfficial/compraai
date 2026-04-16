@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteConfig, SiteTexts, SiteTheme, DEFAULT_TEXTS, DEFAULT_THEME, FONT_OPTIONS } from '@/contexts/SiteConfigContext';
 import defaultLogo from '@/assets/compraai-logo.png';
+import { ACCEPT_IMAGE, validateUploadFile } from '@/lib/security';
 
 const Field = ({ label, value, onChange, area = false, hint }: {
   label: string; value: string;
@@ -118,10 +119,8 @@ const AdminSettings = () => {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Selecione um arquivo de imagem.');
-      return;
-    }
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
@@ -336,7 +335,7 @@ const AdminSettings = () => {
                     <input
                       ref={logoInputRef}
                       type="file"
-                      accept="image/*"
+                      accept={ACCEPT_IMAGE}
                       className="hidden"
                       onChange={handleLogoUpload}
                     />
@@ -460,12 +459,14 @@ const AdminSettings = () => {
                   />
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={ACCEPT_IMAGE}
                     className="hidden"
                     id="seller-banner-upload"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+                      const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+                      if (!check.ok) { toast.error(check.error!); return; }
                       const reader = new FileReader();
                       reader.onload = () => {
                         const dataUrl = reader.result as string;

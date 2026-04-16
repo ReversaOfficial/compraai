@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Truck, Upload, User, Camera, CreditCard, MapPin } from 'lucide-react';
 import MarketplaceLayout from '@/components/marketplace/MarketplaceLayout';
+import { ACCEPT_IMAGE, validateUploadFile, sanitizeFilename, sanitizeText } from '@/lib/security';
 
 const vehicleTypes = [
   { value: 'bicicleta', label: '🚲 Bicicleta' },
@@ -49,14 +50,16 @@ const CourierSignup = () => {
 
   const handleFileSelect = (file: File | null, type: 'selfie' | 'vehicle') => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Arquivo muito grande (max 5MB)'); return; }
+    const check = validateUploadFile(file, { maxSize: 5 * 1024 * 1024 });
+    if (!check.ok) { toast.error(check.error!); return; }
     const url = URL.createObjectURL(file);
     if (type === 'selfie') { setSelfieFile(file); setSelfiePreview(url); }
     else { setVehicleFile(file); setVehiclePreview(url); }
   };
 
   const uploadFile = async (file: File, userId: string, type: string) => {
-    const ext = file.name.split('.').pop();
+    const safeName = sanitizeFilename(file.name);
+    const ext = (safeName.split('.').pop() || 'jpg').toLowerCase();
     const path = `${userId}/${type}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('courier-documents').upload(path, file);
     if (error) throw error;
@@ -203,7 +206,7 @@ const CourierSignup = () => {
                       <span className="text-sm text-muted-foreground">Clique para enviar</span>
                     </>
                   )}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => handleFileSelect(e.target.files?.[0] || null, 'selfie')} />
+                  <input type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={e => handleFileSelect(e.target.files?.[0] || null, 'selfie')} />
                 </label>
               </div>
               <div>
@@ -217,7 +220,7 @@ const CourierSignup = () => {
                       <span className="text-sm text-muted-foreground">Clique para enviar</span>
                     </>
                   )}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => handleFileSelect(e.target.files?.[0] || null, 'vehicle')} />
+                  <input type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={e => handleFileSelect(e.target.files?.[0] || null, 'vehicle')} />
                 </label>
               </div>
             </CardContent>
