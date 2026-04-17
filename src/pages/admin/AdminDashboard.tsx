@@ -8,38 +8,34 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const stats = [
-  { label: 'Vendas Total', value: fmt(142580.00), icon: DollarSign, change: '+15%' },
-  { label: 'Pedidos', value: '847', icon: ShoppingBag, change: '+22%' },
-  { label: 'Lojistas Ativos', value: '6', icon: Store, change: '' },
-  { label: 'Clientes', value: '1.234', icon: Users, change: '+18%' },
-  { label: 'Comissão Gerada', value: fmt(14258.00), icon: TrendingUp, change: '+15%' },
-  { label: 'Produtos', value: '183', icon: Package, change: '' },
+  { label: 'Vendas Total', value: fmt(0), icon: DollarSign, change: '' },
+  { label: 'Pedidos', value: '0', icon: ShoppingBag, change: '' },
+  { label: 'Lojistas Ativos', value: '0', icon: Store, change: '' },
+  { label: 'Clientes', value: '0', icon: Users, change: '' },
+  { label: 'Comissão Gerada', value: fmt(0), icon: TrendingUp, change: '' },
+  { label: 'Produtos', value: '0', icon: Package, change: '' },
 ];
 
 const revenueData = [
-  { month: 'Jan', receita: 18500, comissao: 1850 },
-  { month: 'Fev', receita: 21200, comissao: 2120 },
-  { month: 'Mar', receita: 19800, comissao: 1980 },
-  { month: 'Abr', receita: 24500, comissao: 2450 },
-  { month: 'Mai', receita: 28300, comissao: 2830 },
-  { month: 'Jun', receita: 30280, comissao: 3028 },
+  { month: 'Jan', receita: 0, comissao: 0 },
+  { month: 'Fev', receita: 0, comissao: 0 },
+  { month: 'Mar', receita: 0, comissao: 0 },
+  { month: 'Abr', receita: 0, comissao: 0 },
+  { month: 'Mai', receita: 0, comissao: 0 },
+  { month: 'Jun', receita: 0, comissao: 0 },
 ];
 
 const ordersData = [
-  { month: 'Jan', pedidos: 98 },
-  { month: 'Fev', pedidos: 125 },
-  { month: 'Mar', pedidos: 112 },
-  { month: 'Abr', pedidos: 148 },
-  { month: 'Mai', pedidos: 167 },
-  { month: 'Jun', pedidos: 197 },
+  { month: 'Jan', pedidos: 0 },
+  { month: 'Fev', pedidos: 0 },
+  { month: 'Mar', pedidos: 0 },
+  { month: 'Abr', pedidos: 0 },
+  { month: 'Mai', pedidos: 0 },
+  { month: 'Jun', pedidos: 0 },
 ];
 
 const categoryData = [
-  { name: 'Moda', value: 35, fill: 'hsl(160, 84%, 28%)' },
-  { name: 'Eletrônicos', value: 25, fill: 'hsl(28, 90%, 55%)' },
-  { name: 'Casa', value: 15, fill: 'hsl(210, 92%, 45%)' },
-  { name: 'Beleza', value: 12, fill: 'hsl(142, 71%, 45%)' },
-  { name: 'Outros', value: 13, fill: 'hsl(38, 92%, 50%)' },
+  { name: 'Sem dados', value: 1, fill: 'hsl(var(--muted))' },
 ];
 
 const revenueConfig = {
@@ -51,14 +47,7 @@ const ordersConfig = {
   pedidos: { label: 'Pedidos', color: 'hsl(210, 92%, 45%)' },
 };
 
-const recentStores = [
-  { name: 'Moda Bella', status: 'active', plan: 'Premium', revenue: 28400 },
-  { name: 'TechZone', status: 'active', plan: 'Premium', revenue: 45200 },
-  { name: 'Casa Viva', status: 'active', plan: 'Intermediário', revenue: 12800 },
-  { name: 'Sabor da Terra', status: 'active', plan: 'Básico', revenue: 18900 },
-  { name: 'Bella Pele', status: 'active', plan: 'Intermediário', revenue: 22300 },
-  { name: 'SportFit', status: 'pending', plan: 'Básico', revenue: 8700 },
-];
+const recentStores: { name: string; status: string; plan: string; revenue: number }[] = [];
 
 const AdminDashboard = () => (
   <AdminLayout>
@@ -153,7 +142,13 @@ const AdminDashboard = () => (
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {recentStores.map(s => (
+                {recentStores.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-sm">
+                      Nenhuma loja cadastrada ainda.
+                    </td>
+                  </tr>
+                ) : recentStores.map(s => (
                   <tr key={s.name} className="hover:bg-muted/30">
                     <td className="p-3 font-medium">{s.name}</td>
                     <td className="p-3 text-muted-foreground hidden sm:table-cell">{s.plan}</td>
