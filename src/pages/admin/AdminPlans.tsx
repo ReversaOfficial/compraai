@@ -89,7 +89,7 @@ const AdminPlans = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total de Planos', value: plans.length, icon: Package },
+            { label: 'Planos Vendidos', value: 0, icon: Package },
             { label: 'Lojistas Ativos', value: 0, icon: Users },
             { label: 'Receita Mensal Est.', value: fmt(0), icon: DollarSign },
             { label: 'Plano Mais Popular', value: plans.find(p => p.popular)?.name ?? '—', icon: Star },
