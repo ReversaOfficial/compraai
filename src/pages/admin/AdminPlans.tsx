@@ -90,11 +90,8 @@ const AdminPlans = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Total de Planos', value: plans.length, icon: Package },
-            { label: 'Lojistas Ativos', value: sellers.filter(s => s.is_active !== false).length, icon: Users },
-            { label: 'Receita Mensal Est.', value: fmt(sellers.reduce((acc, s) => {
-              const p = plans.find(pl => pl.id === s.plan_id);
-              return acc + (p?.monthly_price ?? 0);
-            }, 0)), icon: DollarSign },
+            { label: 'Lojistas Ativos', value: 0, icon: Users },
+            { label: 'Receita Mensal Est.', value: fmt(0), icon: DollarSign },
             { label: 'Plano Mais Popular', value: plans.find(p => p.popular)?.name ?? '—', icon: Star },
           ].map(s => (
             <Card key={s.label} className="shadow-card">
