@@ -174,10 +174,4 @@ export const getProductsByCategory = (categoryId: string): Product[] =>
 export const getCategoryByName = (name: string): Category | undefined =>
   categories.find(c => c.name === name);
 
-export const orders: Order[] = [
-  { id: 'ORD-001', customerId: 'c1', customerName: 'Maria Silva', items: [{ product: products[0], quantity: 1, storeId: 's1' }, { product: products[12], quantity: 2, storeId: 's4' }], total: 469.70, status: 'delivered', paymentMethod: 'pix', createdAt: '2026-04-06', deliveryMethod: 'delivery' },
-  { id: 'ORD-002', customerId: 'c2', customerName: 'João Santos', items: [{ product: products[2], quantity: 1, storeId: 's2' }], total: 299.90, status: 'preparing', paymentMethod: 'credit_card', createdAt: '2026-04-07', deliveryMethod: 'pickup' },
-  { id: 'ORD-003', customerId: 'c3', customerName: 'Ana Oliveira', items: [{ product: products[14], quantity: 1, storeId: 's5' }, { product: products[16], quantity: 1, storeId: 's6' }], total: 529.80, status: 'paid', paymentMethod: 'pix', createdAt: '2026-04-08', deliveryMethod: 'delivery' },
-  { id: 'ORD-004', customerId: 'c4', customerName: 'Carlos Lima', items: [{ product: products[3], quantity: 1, storeId: 's2' }], total: 499.90, status: 'pending', paymentMethod: 'credit_card', createdAt: '2026-04-08', deliveryMethod: 'delivery' },
-  { id: 'ORD-005', customerId: 'c5', customerName: 'Fernanda Costa', items: [{ product: products[13], quantity: 3, storeId: 's4' }], total: 137.70, status: 'ready', paymentMethod: 'pix', createdAt: '2026-04-07', deliveryMethod: 'pickup' },
-];
+export const orders: Order[] = [];
