@@ -9,27 +9,27 @@ import { useAuth, SellerProfile } from '@/contexts/AuthContext';
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const stats = [
-  { label: 'Vendas Hoje', value: fmt(1249.70), icon: DollarSign, change: '+12%' },
-  { label: 'Vendas do Mês', value: fmt(18420.50), icon: TrendingUp, change: '+8%' },
-  { label: 'Pedidos Pendentes', value: '7', icon: ShoppingBag, change: '' },
-  { label: 'Produtos Ativos', value: '45', icon: Package, change: '' },
+  { label: 'Vendas Hoje', value: fmt(0), icon: DollarSign, change: '' },
+  { label: 'Vendas do Mês', value: fmt(0), icon: TrendingUp, change: '' },
+  { label: 'Pedidos Pendentes', value: '0', icon: ShoppingBag, change: '' },
+  { label: 'Produtos Ativos', value: '0', icon: Package, change: '' },
 ];
 
 const salesData = [
-  { day: 'Seg', vendas: 420 },
-  { day: 'Ter', vendas: 580 },
-  { day: 'Qua', vendas: 350 },
-  { day: 'Qui', vendas: 690 },
-  { day: 'Sex', vendas: 820 },
-  { day: 'Sáb', vendas: 950 },
-  { day: 'Dom', vendas: 440 },
+  { day: 'Seg', vendas: 0 },
+  { day: 'Ter', vendas: 0 },
+  { day: 'Qua', vendas: 0 },
+  { day: 'Qui', vendas: 0 },
+  { day: 'Sex', vendas: 0 },
+  { day: 'Sáb', vendas: 0 },
+  { day: 'Dom', vendas: 0 },
 ];
 
 const monthlyData = [
-  { month: 'Jan', receita: 12400, pedidos: 42 },
-  { month: 'Fev', receita: 15200, pedidos: 58 },
-  { month: 'Mar', receita: 13800, pedidos: 47 },
-  { month: 'Abr', receita: 18420, pedidos: 65 },
+  { month: 'Jan', receita: 0, pedidos: 0 },
+  { month: 'Fev', receita: 0, pedidos: 0 },
+  { month: 'Mar', receita: 0, pedidos: 0 },
+  { month: 'Abr', receita: 0, pedidos: 0 },
 ];
 
 const salesConfig = { vendas: { label: 'Vendas (R$)', color: 'hsl(160, 84%, 28%)' } };
@@ -38,12 +38,7 @@ const monthlyConfig = {
   pedidos: { label: 'Pedidos', color: 'hsl(28, 90%, 55%)' },
 };
 
-const recentOrders = [
-  { id: 'ORD-001', customer: 'Maria Silva', total: 469.70, status: 'Entregue', date: '06/04' },
-  { id: 'ORD-003', customer: 'Ana Oliveira', total: 199.90, status: 'Pago', date: '08/04' },
-  { id: 'ORD-004', customer: 'Carlos Lima', total: 499.90, status: 'Pendente', date: '08/04' },
-  { id: 'ORD-005', customer: 'Fernanda Costa', total: 137.70, status: 'Pronto', date: '07/04' },
-];
+const recentOrders: { id: string; customer: string; total: number; status: string; date: string }[] = [];
 
 const statusColor: Record<string, string> = {
   'Entregue': 'bg-success/10 text-success',
@@ -130,7 +125,9 @@ const SellerDashboard = () => {
           <CardHeader className="pb-3"><CardTitle className="text-base">Pedidos Recentes</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentOrders.map(o => (
+              {recentOrders.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Nenhum pedido ainda.</p>
+              ) : recentOrders.map(o => (
                 <div key={o.id} className="flex items-center justify-between text-sm">
                   <div>
                     <p className="font-medium">{o.customer}</p>
@@ -150,27 +147,7 @@ const SellerDashboard = () => {
         <Card className="shadow-card">
           <CardHeader className="pb-3"><CardTitle className="text-base">Alertas</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-start gap-3 rounded-lg bg-warning/5 p-3">
-              <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Estoque baixo</p>
-                <p className="text-xs text-muted-foreground">3 produtos com menos de 5 unidades</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-lg bg-info/5 p-3">
-              <ShoppingBag className="h-5 w-5 text-info shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Novos pedidos</p>
-                <p className="text-xs text-muted-foreground">2 pedidos aguardando processamento</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-lg bg-success/5 p-3">
-              <DollarSign className="h-5 w-5 text-success shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Repasse disponível</p>
-                <p className="text-xs text-muted-foreground">R$ 2.340,00 prontos para saque</p>
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground text-center py-6">Nenhum alerta no momento.</p>
           </CardContent>
         </Card>
       </div>
