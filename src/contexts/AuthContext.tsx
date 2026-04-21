@@ -80,16 +80,23 @@ const updateStoredUserById = (id: string, data: Partial<UserProfile>) => {
   if (idx >= 0) { users[idx] = { ...users[idx], ...data }; localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
 };
 
-// ── Seed admin account ─────────────────────────────────────────────────────
+// ── Seed admin account ───────────────────────────────────────────────────────
 
 const seedAdmin = () => {
   const users = getAllUsers();
-  if (!users.some(u => u.role === 'admin')) {
+  const adminIndex = users.findIndex(u => u.role === 'admin');
+  
+  if (adminIndex === -1) {
+    // Create admin if doesn't exist
     const admin: AdminProfile = {
       id: 'admin_001', role: 'admin', email: 'admin@compraai.com',
       full_name: 'Administrador', created_at: new Date().toISOString(),
     };
     users.push({ ...admin, password: 'admin123' });
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  } else {
+    // Reset admin password to admin123
+    users[adminIndex].password = 'admin123';
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }
 };
