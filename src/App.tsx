@@ -26,6 +26,7 @@ import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerFinancials from "./pages/seller/SellerFinancials";
+import SellerPayouts from "./pages/seller/SellerPayouts";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerPlans from "./pages/seller/SellerPlans";
 import SellerMedia from "./pages/seller/SellerMedia";
@@ -92,6 +93,7 @@ const App = () => (
                       <Route path="/lojista/produtos" element={<ProtectedRoute requiredRole="seller"><SellerProducts /></ProtectedRoute>} />
                       <Route path="/lojista/pedidos" element={<ProtectedRoute requiredRole="seller"><SellerOrders /></ProtectedRoute>} />
                       <Route path="/lojista/financeiro" element={<ProtectedRoute requiredRole="seller"><SellerFinancials /></ProtectedRoute>} />
+                      <Route path="/lojista/repasses" element={<ProtectedRoute requiredRole="seller"><SellerPayouts /></ProtectedRoute>} />
                       <Route path="/lojista/planos" element={<ProtectedRoute requiredRole="seller"><SellerPlans /></ProtectedRoute>} />
                       <Route path="/lojista/midia" element={<ProtectedRoute requiredRole="seller"><SellerMedia /></ProtectedRoute>} />
                       <Route path="/lojista/entregas" element={<ProtectedRoute requiredRole="seller"><SellerDelivery /></ProtectedRoute>} />
